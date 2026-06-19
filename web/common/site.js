@@ -99,4 +99,31 @@ const ARTICLES = [
     localStorage.setItem(KEY, String(total));
     countEl.textContent = total.toLocaleString('ja-JP');
   }
+
+  // --- タイトルのタイプライター演出 ---
+  // data-typewriter を付けた要素の文字を、1文字ずつカタカタと表示します。
+  // data-typewriter の値 = 「1文字あたりの表示間隔(ミリ秒)」。省略時は 110。
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll('[data-typewriter]').forEach(function (el) {
+    const chars = Array.from(el.textContent);   // 絵文字も1文字として扱う
+    const speed = parseInt(el.dataset.typewriter, 10) || 110;
+
+    // 「動きを減らす」設定の人には、いきなり全文を表示
+    if (reduceMotion) { el.classList.add('is-done'); return; }
+
+    el.textContent = '';
+    el.classList.add('is-typing');
+    let i = 0;
+    (function tick() {
+      if (i < chars.length) {
+        el.textContent += chars[i++];
+        setTimeout(tick, speed);
+      } else {
+        el.classList.remove('is-typing');
+        el.classList.add('is-done');
+      }
+    })();
+  });
 })();

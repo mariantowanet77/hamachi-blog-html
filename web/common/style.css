@@ -101,6 +101,24 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
 /* ヒーロー（トップの見出し） */
 .hero { text-align: center; padding: 24px 0 8px; }
 .hero h1 { font-size: 2.1rem; margin-bottom: .3em; }
+
+/* タイトルのタイプライター演出（カタカタ表示用のカーソル） */
+.typewriter::after {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  margin-left: 4px;
+  background: var(--accent);
+  vertical-align: -0.12em;
+  animation: caret-blink 1s steps(1) infinite;
+}
+/* 打ち終わったあとカーソルを消したい場合は、次の行のコメントを外してください */
+/* .typewriter.is-done::after { display: none; } */
+@keyframes caret-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .typewriter::after { animation: none; }
+}
 .hero p { color: var(--muted); margin: 0 auto 20px; max-width: 36em; }
 .hero__actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
