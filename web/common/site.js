@@ -92,26 +92,27 @@ const ARTICLES = [
   //   外部のアクセス解析（Google Analytics 等）が必要になります。
   const countEl = document.getElementById('access-count');
   if (countEl) {
-    const KEY = 'oburogu_total_access';
-    let total = parseInt(localStorage.getItem(KEY) || '0', 10);
-    if (isNaN(total)) total = 0;
-    total += 1;
-    localStorage.setItem(KEY, String(total));
-    countEl.textContent = total.toLocaleString('ja-JP');
+    try {
+      const KEY = 'oburogu_total_access';
+      let total = parseInt(localStorage.getItem(KEY) || '0', 10);
+      if (isNaN(total)) total = 0;
+      total += 1;
+      localStorage.setItem(KEY, String(total));
+      countEl.textContent = total.toLocaleString('ja-JP');
+    } catch (e) {
+      // file:// で開くと localStorage がブロックされて例外になることがある。
+      // その場合でもここで握りつぶし、後続（タイプライター等）を止めない。
+      countEl.textContent = '—';
+      console.warn('累計アクセス数を保存できませんでした（http:// で開くと解決します）:', e);
+    }
   }
 
   // --- タイトルのタイプライター演出 ---
   // data-typewriter を付けた要素の文字を、1文字ずつカタカタと表示します。
   // data-typewriter の値 = 「1文字あたりの表示間隔(ミリ秒)」。省略時は 110。
-  const reduceMotion = window.matchMedia &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
   document.querySelectorAll('[data-typewriter]').forEach(function (el) {
     const chars = Array.from(el.textContent);   // 絵文字も1文字として扱う
-    const speed = parseInt(el.dataset.typewriter, 10) || 110;
-
-    // 「動きを減らす」設定の人には、いきなり全文を表示
-    if (reduceMotion) { el.classList.add('is-done'); return; }
+    const speed = parseInt(el.dataset.typewriter, 9) || 110;
 
     el.textContent = '';
     el.classList.add('is-typing');

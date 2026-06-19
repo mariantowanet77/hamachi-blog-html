@@ -116,9 +116,6 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
 /* 打ち終わったあとカーソルを消したい場合は、次の行のコメントを外してください */
 /* .typewriter.is-done::after { display: none; } */
 @keyframes caret-blink { 50% { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) {
-  .typewriter::after { animation: none; }
-}
 .hero p { color: var(--muted); margin: 0 auto 20px; max-width: 36em; }
 .hero__actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
