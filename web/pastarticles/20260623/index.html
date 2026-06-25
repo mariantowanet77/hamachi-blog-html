@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>はじめての記事 — Hello World｜はまち日和</title>
+  <link rel="icon" type="image/svg+xml" href="../../../assets/common/favicon.svg">
+  <!-- 2階層深いので ../../ を付ける -->
+  <link rel="stylesheet" href="../../common/style.css">
+</head>
+<!-- data-base = web ルートまでの相対パス。2階層深いので ../../ -->
+<body data-base="../../">
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-title" href="../../index.html">はまち日和</a>
+      <nav class="site-nav">
+        <a class="btn" href="../../index.html">ホーム</a>
+        <a class="btn" href="../index.html">過去の記事</a>
+        <a class="btn" href="../../about/index.html">このブログについて</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <main class="content">
+      <p><a href="../index.html">← 過去の記事に戻る</a></p>
+
+      <article>
+        <div class="card__meta">
+          <span class="tag">日記</span>
+          <time datetime="2026-06-23">2026-06-23</time>
+        </div>
+        <h1>東京駅の東海道線を</h1>
+
+        <p>どうも、はまちです。</p>
+
+        <p>ワールドカップ、始まってそろそろ二週間ぐらいですが、すごく盛り上がってますね。<br>　自分が一番心に残っているのは遠藤、本田、香川、長友、長谷部、川島などのメンツでずっと戦っていたのを覚えています。
+          ワールドカップぐらいしか自分はサッカーみませんが、世代交代が着々と進んでいるのを感じます。けがしちゃった選手も多いですが、オランダに引き分け、チュニジアに勝ってとてもいい感じです。</p>
+        </p>
+
+        <h2>画像を入れたいときは</h2>
+        <p>画像は <code>assets</code> 側の同じ名前のフォルダ
+           （<code>assets/pastarticles/hello-world/</code>）に置き、次のように読み込みます。</p>
+        <pre><code>&lt;img src="../../../assets/pastarticles/hello-world/photo.jpg" alt="説明"&gt;</code></pre>
+        <p>※ <code>web</code> から見て <code>assets</code> は1つ上の階層にあるので、
+           この記事からは <code>../../../assets/...</code> になります。</p>
+      </article>
+    </main>
+
+    <aside class="sidebar">
+      <section class="sidebar__block">
+        <h2 class="sidebar__title">過去の記事</h2>
+        <ul class="article-list" id="sidebar-articles"></ul>
+      </section>
+    </aside>
+
+  </div>
+
+  <footer class="site-footer">
+    <p class="access-count">累計アクセス数：<span id="access-count">—</span></p>
+    <p class="copyright">© 2026 はまち日和</p>
+    <a class="secret-link" href="../../secret/index.html">【ひ♡み♡つ】</a>
+  </footer>
+
+  <script src="../../common/site.js"></script>
+</body>
+</html>
