@@ -30,10 +30,9 @@ const ARTICLES = [
   const base = document.body.dataset.base || '';
 
   // 記事へのリンクを作る。
-  // フォルダ指定（末尾が /）のときは index.html を補って ○○/index.html へ飛ばす。
-  // （file:// で直接開いてもちゃんと記事ページが開けるようにするため）
+  // フォルダ指定（末尾が /）のときは、そのままフォルダURL（○○/）へ飛ばす。
+  // S3 の静的ホスティングが index.html を自動で補うので、URL に index.html は出ない。
   function articleHref(path) {
-    if (path.charAt(path.length - 1) === '/') path += 'index.html';
     return base + path;
   }
 
@@ -86,11 +85,21 @@ const ARTICLES = [
       : '<p class="article-list__empty">まだ記事がありません。site.js の ARTICLES に追加してください。</p>';
   }
 
-// --- 累計アクセス数（Lambda + DynamoDB の本物のカウンター） ---
+// --- 累計アクセス数（Lambda + DynamoDB｜localStorageで二重カウント防止） ---
   const countEl = document.getElementById('access-count');
   if (countEl) {
     const COUNTER_URL = 'https://q4u3h52bgomsp5k76sjxj4p4uu0uvfmf.lambda-url.ap-northeast-1.on.aws/';
-    fetch(COUNTER_URL, { credentials: 'include' })
+    let isNew = false;
+    try {
+      if (!localStorage.getItem('hamachi_visited')) {
+        isNew = true;
+        localStorage.setItem('hamachi_visited', '1');
+      }
+    } catch (e) {
+      // localStorageが使えない環境（プライベートモード等）では毎回カウント扱い
+      isNew = true;
+    }
+    fetch(COUNTER_URL + (isNew ? '?new=1' : ''))
       .then(function (res) { return res.json(); })
       .then(function (data) {
         countEl.textContent = Number(data.count).toLocaleString('ja-JP');
