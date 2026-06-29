@@ -86,25 +86,19 @@ const ARTICLES = [
       : '<p class="article-list__empty">まだ記事がありません。site.js の ARTICLES に追加してください。</p>';
   }
 
-  // --- 累計アクセス数（簡易版・localStorage） ---
-  // ※ これは「このブラウザでこのサイトを開いた回数」をローカルに数える簡易版です。
-  //   サイト全体での本当の累計を取りたい場合は、サーバー側のカウンタや
-  //   外部のアクセス解析（Google Analytics 等）が必要になります。
+// --- 累計アクセス数（Lambda + DynamoDB の本物のカウンター） ---
   const countEl = document.getElementById('access-count');
   if (countEl) {
-    try {
-      const KEY = 'oburogu_total_access';
-      let total = parseInt(localStorage.getItem(KEY) || '0', 10);
-      if (isNaN(total)) total = 0;
-      total += 1;
-      localStorage.setItem(KEY, String(total));
-      countEl.textContent = total.toLocaleString('ja-JP');
-    } catch (e) {
-      // file:// で開くと localStorage がブロックされて例外になることがある。
-      // その場合でもここで握りつぶし、後続（タイプライター等）を止めない。
-      countEl.textContent = '—';
-      console.warn('累計アクセス数を保存できませんでした（http:// で開くと解決します）:', e);
-    }
+    const COUNTER_URL = 'https://q4u3h52bgomsp5k76sjxj4p4uu0uvfmf.lambda-url.ap-northeast-1.on.aws/';
+    fetch(COUNTER_URL, { credentials: 'include' })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        countEl.textContent = Number(data.count).toLocaleString('ja-JP');
+      })
+      .catch(function (e) {
+        countEl.textContent = '—';
+        console.warn('カウンターの取得に失敗:', e);
+      });
   }
 
   // --- タイトルのタイプライター演出 ---
