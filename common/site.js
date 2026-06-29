@@ -13,6 +13,13 @@
    ===================================================================== */
 const ARTICLES = [
   {
+    title:   '東京駅の東海道線を',
+    date:    '2026-06-23',
+    tag:     '日記',
+    path:    'pastarticles/20260623/',
+    excerpt: 'ワールドカップが盛り上がってますね。世代交代を感じた話。',
+  },
+  {
     title:   'はじめての記事 — Hello World',
     date:    '2026-06-18',
     tag:     '日記',
@@ -112,7 +119,7 @@ const ARTICLES = [
   // data-typewriter の値 = 「1文字あたりの表示間隔(ミリ秒)」。省略時は 110。
   document.querySelectorAll('[data-typewriter]').forEach(function (el) {
     const chars = Array.from(el.textContent);   // 絵文字も1文字として扱う
-    const speed = parseInt(el.dataset.typewriter, 9) || 110;
+    const speed = parseInt(el.dataset.typewriter, 10) || 110;
 
     el.textContent = '';
     el.classList.add('is-typing');

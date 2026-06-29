@@ -1,0 +1,37 @@
+name: Deploy site to S3
+
+on:
+  push:
+    branches: [main]
+
+# OIDCでAWSロールを引き受けるために必須
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::548852144542:role/github-actions-blog-deploy
+          aws-region: ap-northeast-1
+
+      # 静的サイトなのでビルド不要。リポジトリの中身をそのままS3へ同期する。
+      # メタファイル（.git / .github / README / .gitignore）は除外。
+      - name: Deploy to S3
+        run: |
+          aws s3 sync . s3://mariantowa-blog-prod \
+            --delete \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude "README.md" \
+            --exclude ".gitignore"
+
+      - name: Invalidate CloudFront cache
+        run: aws cloudfront create-invalidation --distribution-id E1YK5BA03SBP4M --paths "/*"
