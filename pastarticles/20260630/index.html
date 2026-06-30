@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>はじめての記事 — Hello World｜はまち日和</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/common/favicon.svg">
+  <link rel="stylesheet" href="/common/style.css">
+</head>
+<body data-base="/">
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-title" href="/">はまち日和</a>
+      <nav class="site-nav">
+        <a class="btn" href="/">ホーム</a>
+        <a class="btn" href="/pastarticles/">過去の記事</a>
+        <a class="btn" href="/about/">このブログについて</a>
+      </nav>
+    </div>
+  </header>
+  <div class="layout">
+    <main class="content">
+      <p><a href="/pastarticles/">← 過去の記事に戻る</a></p>
+      <article>
+        <div class="card__meta">
+          <span class="tag">日記</span>
+          <time datetime="2026-06-18">2026-06-18</time>
+        </div>
+        <h1>第一号ホームラン</h1>
+        <p>ブログ投函第一号ということで、何をかけばいいか迷っていますが、お元気でしょうか。
+            知っている人も知らない人もまずは自己紹介、"はまち"です。よろしくお願いいたします。
+        </p>
+        <p>このページが、1記事＝1フォルダ＝1つの <code>index.html</code> の見本になります。
+           新しい記事を書くときは、このフォルダ
+           （<code>pastarticles/hello-world/</code>）ごとコピーして名前を変えるのが簡単です。</p>
+        <h2>画像を入れたいときは</h2>
+        <p>画像は <code>assets</code> 側の同じ名前のフォルダ
+           （<code>assets/pastarticles/hello-world/</code>）に置き、次のように読み込みます。</p>
+        <pre><code>&lt;img src="/assets/pastarticles/hello-world/photo.jpg" alt="説明"&gt;</code></pre>
+        <p>絶対パス（<code>/assets/...</code>）で書けば、どの階層の記事からでも同じ書き方で読み込めます。</p>
+      </article>
+    </main>
+    <aside class="sidebar">
+      <section class="sidebar__block">
+        <h2 class="sidebar__title">過去の記事</h2>
+        <ul class="article-list" id="sidebar-articles"></ul>
+      </section>
+    </aside>
+  </div>
+  <footer class="site-footer">
+    <p class="access-count">あなたは <span id="access-count">—</span> 番目の来訪者です！</p>
+    <p class="copyright">© 2026 はまち日和</p>
+    <a class="secret-link" href="/secret/">【ひ♡み♡つ】</a>
+  </footer>
+  <script src="/common/site.js"></script>
+</body>
+</html>
