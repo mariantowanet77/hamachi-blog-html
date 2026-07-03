@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1780 920" font-family="sans-serif">
+<rect width="1780" height="920" fill="#ffffff"/>
+<defs><marker id="ab" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#1971c2"/></marker></defs>
+<defs><marker id="ao" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#e8590c"/></marker></defs>
+<defs><marker id="ag" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#868e96"/></marker></defs>
+<text x="910" y="42" font-size="17" font-weight="bold" text-anchor="middle">hamachi-daily.com — サーバーレス静的ブログ 全体アーキテクチャ</text>
+<text x="910" y="66" font-size="11" text-anchor="middle" fill="#555">青実線=開発者/デプロイ　橙実線=閲覧者/配信　灰破線=設定・信頼　※緑=Terraformでコード化</text>
+<rect x="560" y="120" width="1200" height="780" rx="8" fill="none" stroke="#ff9900" stroke-width="1.5" stroke-dasharray="5,4"/>
+<text x="568" y="136" font-size="12" font-weight="bold" fill="#ff9900">AWS Cloud — アカウント 548852144542</text>
+<rect x="210" y="150" width="300" height="210" rx="8" fill="none" stroke="#333333" stroke-width="1.5" stroke-dasharray="5,4"/>
+<text x="218" y="166" font-size="12" font-weight="bold" fill="#333333">GitHub (クラウド)</text>
+<rect x="1110" y="160" width="560" height="130" rx="8" fill="none" stroke="#2f9e44" stroke-width="1.5" stroke-dasharray="5,4"/>
+<text x="1118" y="176" font-size="11" font-weight="bold" fill="#2f9e44">アクセスカウンター (サーバーレス)</text>
+<rect x="1110" y="580" width="560" height="250" rx="8" fill="none" stroke="#2f9e44" stroke-width="1.5" stroke-dasharray="5,4"/>
+<text x="1118" y="596" font-size="11" font-weight="bold" fill="#2f9e44">認証・権限 (IAM)</text>
+<polyline points="160,420 800,420" fill="none" stroke="#e8590c" stroke-width="2.2" marker-end="url(#ao)"/>
+<rect x="449.0" y="403" width="62.0" height="15" fill="#ffffff" opacity="0.85"/>
+<text x="480" y="414" font-size="9.5" text-anchor="middle" fill="#e8590c">HTTPSでアクセス</text>
+<polyline points="855,456 855,496" fill="none" stroke="#e8590c" stroke-width="2.2" marker-end="url(#ao)"/>
+<polyline points="855,552 855,600" fill="none" stroke="#e8590c" stroke-width="2.2" marker-end="url(#ao)"/>
+<rect x="880.2" y="567" width="49.6" height="15" fill="#ffffff" opacity="0.85"/>
+<text x="905" y="578" font-size="9.5" text-anchor="middle" fill="#e8590c">OAC経由で取得</text>
+<polyline points="100,384 100,140 1205,140 1205,180" fill="none" stroke="#e8590c" stroke-width="2.2" marker-end="url(#ao)"/>
+<rect x="553.9" y="124" width="192.20000000000002" height="15" fill="#ffffff" opacity="0.85"/>
+<text x="650" y="135" font-size="9.5" text-anchor="middle" fill="#e8590c">fetch(?new=1)/localStorageで二重防止</text>
+<polyline points="1260,216 1400,216" fill="none" stroke="#e8590c" stroke-width="2.2" marker-end="url(#ao)"/>
+<rect x="1299.0" y="199" width="62.0" height="15" fill="#ffffff" opacity="0.85"/>
+<text x="1330" y="210" font-size="9.5" text-anchor="middle" fill="#e8590c">get/update</text>
+<polyline points="725,291 760,291 760,404 800,404" fill="none" stroke="#868e96" stroke-width="2.2" stroke-dasharray="6,4" marker-end="url(#ag)"/>
+<rect x="760.7" y="291" width="18.6" height="15" fill="#ffffff" opacity="0.85"/>
+<text x="770" y="302" font-size="9.5" text-anchor="middle" fill="#868e96">DNS</text>
+<polyline points="725,201 775,201 775,392 800,392" fill="none" stroke="#868e96" stroke-width="2.2" stroke-dasharray="6,4" marker-end="url(#ag)"/>
+<rect x="780.7" y="201" width="18.6" height="15" fill="#ffffff" opacity="0.85"/>
+<text x="790" y="212" font-size="9.5" text-anchor="middle" fill="#868e96">証明書</text>
+<polyline points="160,216 210,216" fill="none" stroke="#1971c2" stroke-width="2.2" marker-end="url(#ab)"/>
+<rect x="160.2" y="199" width="49.6" height="15" fill="#ffffff" opacity="0.85"/>
+<text x="185" y="210" font-size="9.5" text-anchor="middle" fill="#1971c2">git push</text>
+<polyline points="492,300 650,300 650,636 800,636" fill="none" stroke="#1971c2" stroke-width="2.2" marker-end="url(#ab)"/>
+<rect x="603.5" y="619" width="93.0" height="15" fill="#ffffff" opacity="0.85"/>
+<text x="650" y="630" font-size="9.5" text-anchor="middle" fill="#1971c2">deploy (OIDC認証)</text>
+<polyline points="492,274 600,274 600,360 700,360 700,384 820,384" fill="none" stroke="#1971c2" stroke-width="2.2" marker-end="url(#ab)"/>
+<rect x="735.2" y="343" width="49.6" height="15" fill="#ffffff" opacity="0.85"/>
+<text x="760" y="354" font-size="9.5" text-anchor="middle" fill="#1971c2">cache無効化</text>
+<polyline points="492,339 1050,339 1050,610 1150,610" fill="none" stroke="#1971c2" stroke-width="2.2" stroke-dasharray="6,4" marker-end="url(#ab)"/>
+<rect x="1053.8" y="591" width="12.4" height="15" fill="#ffffff" opacity="0.85"/>
+<text x="1060" y="602" font-size="9.5" text-anchor="middle" fill="#1971c2">信頼</text>
+<polyline points="1260,643 1400,643" fill="none" stroke="#1971c2" stroke-width="2.2" stroke-dasharray="6,4" marker-end="url(#ab)"/>
+<polyline points="112,252 112,850 1255,850 1255,792" fill="none" stroke="#1971c2" stroke-width="2.2" stroke-dasharray="6,4" marker-end="url(#ab)"/>
+<rect x="639.7" y="834" width="80.60000000000001" height="15" fill="#ffffff" opacity="0.85"/>
+<text x="680" y="845" font-size="9.5" text-anchor="middle" fill="#1971c2">aws sso login</text>
+<polyline points="88,252 88,808 695,808 695,800" fill="none" stroke="#1971c2" stroke-width="2.2" stroke-dasharray="6,4" marker-end="url(#ab)"/>
+<rect x="341.1" y="792" width="117.8" height="15" fill="#ffffff" opacity="0.85"/>
+<text x="400" y="803" font-size="9.5" text-anchor="middle" fill="#1971c2">terraform (state共有)</text>
+<rect x="40" y="180" width="120" height="72" rx="8" fill="#e7f5ff" stroke="#1971c2" stroke-width="1.5"/>
+<text x="100.0" y="213.0" font-size="10" font-weight="bold" text-anchor="middle" fill="#222">開発者 (はまち)</text>
+<text x="100.0" y="227.0" font-size="10" font-weight="bold" text-anchor="middle" fill="#222">WSL / VSCode ・ 2PC</text>
+<rect x="40" y="384" width="120" height="72" rx="8" fill="#fff4e6" stroke="#e8590c" stroke-width="1.5"/>
+<text x="100.0" y="417.0" font-size="10" font-weight="bold" text-anchor="middle" fill="#222">サイト訪問者</text>
+<text x="100.0" y="431.0" font-size="10" font-weight="bold" text-anchor="middle" fill="#222">(ブラウザ)</text>
+<rect x="228" y="186" width="264" height="36" rx="8" fill="#f1f3f5" stroke="#333" stroke-width="1.5"/>
+<text x="360.0" y="201.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">Repo: hamachi-dailys-blog</text>
+<text x="360.0" y="215.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">Terraform (.tf) 一式</text>
+<rect x="228" y="226" width="264" height="36" rx="8" fill="#f1f3f5" stroke="#333" stroke-width="1.5"/>
+<text x="360.0" y="241.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">Repo: hamachi-blog-html</text>
+<text x="360.0" y="255.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">HTML/CSS/JS + workflows</text>
+<rect x="228" y="266" width="264" height="52" rx="8" fill="#e7f5ff" stroke="#1971c2" stroke-width="1.5"/>
+<text x="360.0" y="289.0" font-size="9" font-weight="bold" text-anchor="middle" fill="#222">GitHub Actions (CI/CD)</text>
+<text x="360.0" y="303.0" font-size="9" font-weight="bold" text-anchor="middle" fill="#222">push→sync→無効化 (PC不要)</text>
+<rect x="228" y="323" width="264" height="32" rx="8" fill="#f8f0fc" stroke="#9c36b5" stroke-width="1.5"/>
+<text x="360.0" y="343.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">OIDCでロール一時取得(長期キー無)</text>
+<rect x="630" y="172" width="95" height="58" rx="8" fill="#eaf7ee" stroke="#2f9e44" stroke-width="1.5"/>
+<text x="677.5" y="198.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">ACM</text>
+<text x="677.5" y="212.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">TLS証明書</text>
+<rect x="630" y="262" width="95" height="58" rx="8" fill="#eaf7ee" stroke="#2f9e44" stroke-width="1.5"/>
+<text x="677.5" y="288.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">Route 53</text>
+<text x="677.5" y="302.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">DNS</text>
+<rect x="800" y="384" width="110" height="72" rx="8" fill="#eaf7ee" stroke="#2f9e44" stroke-width="1.5"/>
+<text x="855.0" y="417.0" font-size="9" font-weight="bold" text-anchor="middle" fill="#222">CloudFront+OAC</text>
+<text x="855.0" y="431.0" font-size="9" font-weight="bold" text-anchor="middle" fill="#222">E1YK5BA03SBP4M</text>
+<rect x="800" y="496" width="110" height="56" rx="8" fill="#eaf7ee" stroke="#2f9e44" stroke-width="1.5"/>
+<text x="855.0" y="521.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">CloudFront Functions</text>
+<text x="855.0" y="535.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">URI補完/ヘッダー</text>
+<rect x="800" y="600" width="110" height="72" rx="8" fill="#eaf7ee" stroke="#2f9e44" stroke-width="1.5"/>
+<text x="855.0" y="626.0" font-size="9" font-weight="bold" text-anchor="middle" fill="#222">S3 (非公開)</text>
+<text x="855.0" y="640.0" font-size="9" font-weight="bold" text-anchor="middle" fill="#222">blog-prod</text>
+<text x="855.0" y="654.0" font-size="9" font-weight="bold" text-anchor="middle" fill="#222">静的サイト本体</text>
+<rect x="1150" y="180" width="110" height="72" rx="8" fill="#eaf7ee" stroke="#2f9e44" stroke-width="1.5"/>
+<text x="1205.0" y="206.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">Lambda(Python)</text>
+<text x="1205.0" y="220.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">visitor-counter</text>
+<text x="1205.0" y="234.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">関数URL(CORS)</text>
+<rect x="1400" y="180" width="110" height="72" rx="8" fill="#eaf7ee" stroke="#2f9e44" stroke-width="1.5"/>
+<text x="1455.0" y="206.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">DynamoDB</text>
+<text x="1455.0" y="220.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">visitor-counter</text>
+<text x="1455.0" y="234.0" font-size="9" font-weight="normal" text-anchor="middle" fill="#222">PAY_PER_REQUEST</text>
+<rect x="1150" y="610" width="110" height="66" rx="8" fill="#eaf7ee" stroke="#2f9e44" stroke-width="1.5"/>
+<text x="1205.0" y="640.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">IAM OIDC Provider</text>
+<text x="1205.0" y="654.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">GitHub信頼</text>
+<rect x="1400" y="610" width="110" height="66" rx="8" fill="#eaf7ee" stroke="#2f9e44" stroke-width="1.5"/>
+<text x="1455.0" y="633.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">Deploy Role</text>
+<text x="1455.0" y="647.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">S3+CF無効化のみ</text>
+<text x="1455.0" y="661.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">(最小権限)</text>
+<rect x="1270" y="720" width="110" height="72" rx="8" fill="#eaf7ee" stroke="#2f9e44" stroke-width="1.5"/>
+<text x="1325.0" y="746.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">IAM Identity Center</text>
+<text x="1325.0" y="760.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">SSO+MFA</text>
+<text x="1325.0" y="774.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">ルート卒業</text>
+<rect x="600" y="720" width="190" height="80" rx="8" fill="#eaf7ee" stroke="#2f9e44" stroke-width="1.5"/>
+<text x="695.0" y="750.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">S3: mariantowa-tfstate</text>
+<text x="695.0" y="764.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">リモートstate</text>
+<text x="695.0" y="778.0" font-size="8" font-weight="normal" text-anchor="middle" fill="#222">バージョニング+暗号化+ロック</text>
+</svg>

@@ -168,7 +168,7 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
   background: var(--text);
   color: #efe9dd;
   text-align: center;
-  padding: 22px 20px;
+  padding: 12px 20px;          /* 縦を小さめにして砂浜が隠れにくいように */
 }
 
 /* ---------- こっそりボタン【ひ♡み♡つ】 ---------- */
@@ -378,23 +378,25 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
   from { transform: translateY(0); }
   to   { transform: translateY(-10px); }
 }
-/* 月あかりの水面反射（月の真下でゆらめく） */
+/* 月あかりの水面反射（月の真下に丸く映り、水面でゆらめく） */
 .scene__moonlight {
   position: absolute;
-  top: 0; bottom: 0;
-  right: 12%;
-  width: 60px;
-  transform: translateX(50%);
-  background: linear-gradient(180deg,
-    rgba(255,249,224,.38) 0%,
-    rgba(255,249,224,.10) 55%,
+  top: 4%;             /* 水平線のすぐ下 */
+  right: 12%;          /* 月と同じ水平位置に合わせる */
+  width: 72px;
+  height: 62px;        /* 水面なので少し平たい円 */
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%,
+    rgba(255,252,235,.75) 0%,
+    rgba(255,249,224,.40) 42%,
+    rgba(255,249,224,.12) 66%,
     rgba(255,249,224,0)   100%);
   filter: blur(3px);
   animation: moonlight-shimmer 4.5s ease-in-out infinite;
 }
 @keyframes moonlight-shimmer {
-  0%, 100% { opacity: .7; width: 56px; }
-  50%      { opacity: 1;  width: 68px; }
+  0%, 100% { opacity: .8; transform: scale(1,    1);   }
+  50%      { opacity: 1;  transform: scale(1.10, 0.9); }
 }
 
 /* 砂浜 */
