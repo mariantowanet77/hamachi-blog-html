@@ -130,4 +130,71 @@ const ARTICLES = [
       }
     })();
   });
+
+  /* =====================================================================
+     ▼ 背景の情景（夜空・海・砂浜）
+     <body> の先頭に .scene を差し込み、星をばらまいて、
+     ときどき流れ星を飛ばします。secret/ 配下では表示しません。
+     ===================================================================== */
+  function initScene() {
+    if (document.querySelector('.scene')) return;      // 二重生成を防ぐ
+    const reduce = window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const scene = document.createElement('div');
+    scene.className = 'scene';
+    scene.setAttribute('aria-hidden', 'true');         // 装飾なので読み上げ対象外
+    scene.innerHTML =
+      '<div class="scene__sky"></div>' +
+      '<div class="scene__moon"></div>' +
+      '<div class="scene__stars"></div>' +
+      '<div class="scene__sea"><div class="scene__moonlight"></div></div>' +
+      '<div class="scene__beach"></div>' +
+      '<div class="scene__shooting"></div>';
+    document.body.prepend(scene);
+
+    // --- 星をばらまく（夜空エリアに） ---
+    const stars = scene.querySelector('.scene__stars');
+    const count = Math.min(160, Math.round(window.innerWidth / 9));
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement('span');
+      s.className = 'star';
+      const size = Math.random() < 0.15 ? 2.6 : (Math.random() < 0.5 ? 1.8 : 1.2);
+      s.style.left = (Math.random() * 100) + '%';
+      s.style.top  = (Math.random() * 100) + '%';
+      s.style.width = s.style.height = size + 'px';
+      s.style.setProperty('--dur',   (2 + Math.random() * 3.5).toFixed(2) + 's');
+      s.style.setProperty('--delay', (Math.random() * 4).toFixed(2) + 's');
+      frag.appendChild(s);
+    }
+    stars.appendChild(frag);
+
+    if (reduce) return;   // 「動きを減らす」設定なら流れ星は出さない
+
+    // --- ときどき小さな流れ星 ---
+    const layer = scene.querySelector('.scene__shooting');
+    function shoot() {
+      const el = document.createElement('div');
+      el.className = 'shooting-star';
+      el.innerHTML = '<span class="shooting-star__streak"></span>';
+      const toLeft = Math.random() < 0.5;              // 左下 or 右下へ
+      const ang = toLeft ? (180 - (16 + Math.random() * 16)) : (16 + Math.random() * 16);
+      el.style.setProperty('--ang',  ang + 'deg');
+      el.style.setProperty('--dist', (280 + Math.random() * 260) + 'px');
+      el.style.setProperty('--sdur', (700 + Math.random() * 450) + 'ms');
+      el.style.left = (Math.random() * 90 + 5) + 'vw';
+      el.style.top  = (Math.random() * 32 + 3) + 'vh';
+      el.addEventListener('animationend', function () { el.remove(); });
+      layer.appendChild(el);
+    }
+    (function schedule() {
+      setTimeout(function () { shoot(); schedule(); }, 4000 + Math.random() * 7000);
+    })();
+  }
+
+  // secret/ 配下（隠しページ）では情景を出さない
+  if (!location.pathname.includes('/secret/')) {
+    initScene();
+  }
 })();

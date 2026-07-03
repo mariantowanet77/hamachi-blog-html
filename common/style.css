@@ -216,6 +216,235 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
 .puzzle__result--ok { color: #2f7d32; }
 .puzzle__result--ng { color: #b53030; }
 
+/* ---------- マインスイーパー ---------- */
+.ms { width: 100%; max-width: 340px; margin: 6px auto 0; }
+.ms__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.ms__stat { font-weight: 800; font-variant-numeric: tabular-nums; }
+.ms__face {
+  font-size: 1.3rem;
+  line-height: 1;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: background .15s;
+}
+.ms__face:hover { background: #faf3e8; }
+.ms__board {
+  display: grid;
+  grid-template-columns: repeat(var(--ms-cols, 9), 1fr);
+  gap: 3px;
+  padding: 3px;
+  background: var(--border);
+  border-radius: 8px;
+}
+.ms__cell {
+  aspect-ratio: 1;
+  width: 100%;
+  padding: 0;
+  border: 1px solid #d8cfbe;
+  border-radius: 5px;
+  background: #efe7d6;          /* 未開放のマス */
+  color: var(--text);
+  font-size: clamp(.85rem, 4vw, 1rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background .1s;
+}
+.ms__cell:hover { background: #e6dcc6; }
+.ms__cell.is-open {
+  background: #fffaf2;          /* 開いたマス */
+  border-color: var(--border);
+  cursor: default;
+}
+.ms__cell.is-mine { background: #ffe0e0; border-color: #e6b8b8; }
+.ms__hint { color: var(--muted); font-size: .8rem; margin: 12px 0 0; }
+
+/* 数字の色（定番配色） */
+.ms__cell[data-n="1"] { color: #1976d2; }
+.ms__cell[data-n="2"] { color: #388e3c; }
+.ms__cell[data-n="3"] { color: #d32f2f; }
+.ms__cell[data-n="4"] { color: #512da8; }
+.ms__cell[data-n="5"] { color: #8d3b1f; }
+.ms__cell[data-n="6"] { color: #00838f; }
+.ms__cell[data-n="7"] { color: #455a64; }
+.ms__cell[data-n="8"] { color: #757575; }
+
+/* クリアすると現れる「次の画面」 */
+.secret-next {
+  margin-top: 24px;
+  padding: 22px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: #fffaf2;
+  text-align: center;
+  animation: secret-fade .4s ease-out;
+}
+.secret-next h2 { margin-top: 0; border: none; padding: 0; }
+@keyframes secret-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------- 背景の情景（夜空・海・砂浜） ----------
+   .scene は site.js が <body> の先頭に差し込みます（secret/ では出しません）。
+   すべてのコンテンツの背面（z-index:-1）に固定表示します。 */
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;        /* 背景なので操作を妨げない */
+}
+
+/* 夜空のグラデーション */
+.scene__sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    #060a1a 0%,
+    #0a1030 34%,
+    #142049 60%,
+    #22335d 80%,
+    #34496f 100%);
+}
+
+/* 月とそのぼんやりした光 */
+.scene__moon {
+  position: absolute;
+  top: 11%;
+  right: 12%;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 38%, #fffef5 0%, #f4ecd0 55%, #e5d7ad 100%);
+  box-shadow:
+    0 0 24px 6px rgba(255, 249, 224, .45),
+    0 0 70px 24px rgba(224, 214, 176, .28);
+}
+
+/* 星（site.js が .star を敷き詰めます） */
+.scene__stars { position: absolute; top: 0; left: 0; right: 0; height: 66%; }
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  opacity: .8;
+  animation: star-twinkle var(--dur, 3s) ease-in-out var(--delay, 0s) infinite;
+}
+@keyframes star-twinkle {
+  0%, 100% { opacity: .18; transform: scale(.6); }
+  50%      { opacity: 1;   transform: scale(1); }
+}
+
+/* 海 */
+.scene__sea {
+  position: absolute;
+  left: 0; right: 0;
+  top: 68%;
+  bottom: 9%;
+  overflow: hidden;
+  background: linear-gradient(180deg, #16294f 0%, #0c1a35 60%, #0a1428 100%);
+}
+/* 水面のさざ波（うっすら流れる光の線） */
+.scene__sea::after {
+  content: "";
+  position: absolute;
+  left: -50%; right: -50%; top: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255,255,255,0)   0px,
+    rgba(255,255,255,0)   8px,
+    rgba(180,205,255,.05) 9px,
+    rgba(180,205,255,.05) 10px);
+  animation: sea-ripple 7s linear infinite;
+}
+@keyframes sea-ripple {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-10px); }
+}
+/* 月あかりの水面反射（月の真下でゆらめく） */
+.scene__moonlight {
+  position: absolute;
+  top: 0; bottom: 0;
+  right: 12%;
+  width: 60px;
+  transform: translateX(50%);
+  background: linear-gradient(180deg,
+    rgba(255,249,224,.38) 0%,
+    rgba(255,249,224,.10) 55%,
+    rgba(255,249,224,0)   100%);
+  filter: blur(3px);
+  animation: moonlight-shimmer 4.5s ease-in-out infinite;
+}
+@keyframes moonlight-shimmer {
+  0%, 100% { opacity: .7; width: 56px; }
+  50%      { opacity: 1;  width: 68px; }
+}
+
+/* 砂浜 */
+.scene__beach {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 9%;
+  background: linear-gradient(180deg, #d4bd90 0%, #c2a771 55%, #b2955f 100%);
+}
+/* 波打ち際の白い泡 */
+.scene__beach::before {
+  content: "";
+  position: absolute;
+  top: -3px; left: 0; right: 0;
+  height: 7px;
+  background: rgba(255,255,255,.55);
+  filter: blur(2px);
+  animation: foam-lap 5s ease-in-out infinite;
+}
+@keyframes foam-lap {
+  0%, 100% { opacity: .35; transform: translateY(0); }
+  50%      { opacity: .70; transform: translateY(-2px); }
+}
+
+/* 流れ星（site.js がときどき生成） */
+.scene__shooting { position: absolute; inset: 0; }
+.shooting-star {
+  position: absolute;
+  width: 0; height: 0;
+  animation: shoot var(--sdur, 900ms) ease-in forwards;
+}
+.shooting-star__streak {
+  display: block;
+  width: 130px; height: 2px;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.95) 100%);
+  border-radius: 2px;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,.85));
+}
+@keyframes shoot {
+  0%   { transform: rotate(var(--ang, 25deg)) translateX(0);                    opacity: 0; }
+  12%  { opacity: 1; }
+  100% { transform: rotate(var(--ang, 25deg)) translateX(var(--dist, 320px));   opacity: 0; }
+}
+
+/* 動きを減らす設定のときは瞬き・波を止める */
+@media (prefers-reduced-motion: reduce) {
+  .star, .scene__sea::after, .scene__moonlight, .scene__beach::before { animation: none; }
+  .star { opacity: .7; }
+}
+
 /* ---------- レスポンシブ ---------- */
 @media (max-width: 820px) {
   .layout { grid-template-columns: 1fr; }
