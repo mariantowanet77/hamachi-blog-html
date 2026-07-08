@@ -6,6 +6,15 @@
   <title>はじめての記事 — Hello World｜はまち日和</title>
   <link rel="icon" type="image/svg+xml" href="/assets/common/favicon.svg">
   <link rel="stylesheet" href="/common/style.css">
+  <!-- この記事のデモ専用スタイル（アニメーション枠） -->
+  <style>
+    .anim-demo { margin-top: 2em; padding: 20px; border: 1px dashed var(--accent); border-radius: var(--radius); background: #fffaf2; }
+    .anim-demo h2 { margin-top: 0; border: none; padding: 0; }
+    .anim-demo ul { padding-left: 1.2em; }
+    .anim-demo__wave { display: block; margin: 8px 0; max-width: 100%; }
+    .anim-demo__pop { display: inline-block; margin: 4px 0 0; padding: 8px 14px; border-radius: 999px; background: var(--accent); color: #fff; }
+    .anim-demo__pop code { background: rgba(255,255,255,.25); padding: 1px 6px; border-radius: 6px; }
+  </style>
 </head>
 <body data-base="/">
   <header class="site-header">
@@ -26,7 +35,7 @@
           <span class="tag">日記</span>
           <time datetime="2026-06-18">2026-06-18</time>
         </div>
-        <h1>はじめての記事 — Hello World</h1>
+        <h1 data-anim="fade-up">アニメーションを作ろう！_ナイフ編</h1>
         <p>はじめまして。「はまち日和」を始めました。
            この記事はひな形に付属しているサンプル記事です。</p>
         <p>このページが、1記事＝1フォルダ＝1つの <code>index.html</code> の見本になります。
@@ -37,6 +46,32 @@
            （<code>assets/pastarticles/hello-world/</code>）に置き、次のように読み込みます。</p>
         <pre><code>&lt;img src="/assets/pastarticles/hello-world/photo.jpg" alt="説明"&gt;</code></pre>
         <p>絶対パス（<code>/assets/...</code>）で書けば、どの階層の記事からでも同じ書き方で読み込めます。</p>
+
+        <!-- ▼ アニメーション（SVG + GSAP）のデモ。不要ならこの <section> ごと消してOK -->
+        <section class="anim-demo">
+          <h2 data-anim="fade-up">
+            アニメーションのデモ
+            <svg id="demo-star" width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z"
+                    fill="#f2c14e" stroke="#b5651d" stroke-width="1"/>
+            </svg>
+          </h2>
+          <p data-anim="fade-up" data-anim-delay="0.1">
+            画面に入ると各要素がふわっと現れます（スクロールで発火）。
+            演出は <code>data-anim</code> 属性を付けるだけ。
+          </p>
+          <ul data-anim="stagger" data-anim-stagger="0.1">
+            <li>下からフェード（<code>fade-up</code>）</li>
+            <li>順番に表示（<code>stagger</code>）</li>
+            <li>拡大表示（<code>scale-in</code>）</li>
+            <li>SVG の線画（<code>draw</code>）</li>
+          </ul>
+          <svg class="anim-demo__wave" data-anim="draw" viewBox="0 0 300 80" width="300" height="80" aria-hidden="true">
+            <path d="M2 40 Q 40 8, 78 40 T 154 40 T 230 40 T 298 40"
+                  fill="none" stroke="#b5651d" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <p class="anim-demo__pop" data-anim="pop">この箱は記事専用プリセット <code>pop</code> で出現します。</p>
+        </section>
       </article>
     </main>
     <aside class="sidebar">
@@ -52,5 +87,10 @@
     <a class="secret-link" href="/secret/">【ひ♡み♡つ】</a>
   </footer>
   <script src="/common/site.js"></script>
+  <!-- アニメーション（SVG + GSAP）。使う記事だけ読み込む -->
+  <script src="/common/vendor/gsap.min.js"></script>
+  <script src="/common/vendor/ScrollTrigger.min.js"></script>
+  <script src="/common/anim.js"></script>
+  <script src="anim.js"></script>
 </body>
 </html>

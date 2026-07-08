@@ -8,8 +8,8 @@
   --surface:   #ffffff;   /* カード・パネルの面 */
   --text:      #2c2a26;   /* 本文の文字色 */
   --muted:     #7a756c;   /* 補足の文字色 */
-  --accent:    #b5651d;   /* アクセント色（リンク・ボタン） */
-  --accent-dk: #8f4f14;   /* アクセント色（濃いめ） */
+  --accent:    #35688f;   /* アクセント色（リンク・ボタン）※夜の海に合う落ち着いた青 */
+  --accent-dk: #274e6c;   /* アクセント色（濃いめ） */
   --border:    #e6e0d4;   /* 罫線 */
   --radius:    12px;
   --max-width: 1080px;
@@ -84,8 +84,8 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
   margin: 28px auto;
   padding: 0 20px;
   display: grid;
-  grid-template-columns: 1fr 280px;
-  gap: 28px;
+  grid-template-columns: 1fr 200px;   /* sidebar を細めにして content（＝画像）に幅を回す */
+  gap: 8px;                    /* content と sidebar の間隔をさらに詰めて content を広げる */
   align-items: start;
 }
 
@@ -97,6 +97,19 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
 }
 .content h1 { margin-top: 0; font-size: 1.8rem; }
 .content h2 { margin-top: 1.8em; border-bottom: 2px solid var(--border); padding-bottom: .3em; }
+/* h3 は小さめ・黒（本文色）ではっきりと */
+.content h3 { margin: 1.6em 0 .3em; font-size: 1.05rem; font-weight: 700; color: var(--text); }
+/* h3 の横にちょこんと添える小言（ぼそっとした一言・小さめで控えめ） */
+.content kogoto { margin-left: .4em; font-size: .78rem; font-weight: 400; color: var(--muted); vertical-align: baseline; }
+
+/* 記事内の画像は白い枠で縁取りして見やすく */
+.content img {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(44, 42, 38, .06);
+}
 
 /* ヒーロー（トップの見出し） */
 .hero { text-align: center; padding: 24px 0 8px; }
@@ -165,8 +178,9 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
 .site-footer {
   position: relative;          /* こっそりボタンを右端に置くための基準 */
   flex-shrink: 0;
-  background: var(--text);
-  color: #efe9dd;
+  /* 背景の砂浜（.scene__beach）と同じ砂色にして、最下部でも境目を感じさせない */
+  background: linear-gradient(180deg, #d4bd90 0%, #c2a771 55%, #b2955f 100%);
+  color: var(--text);
   text-align: center;
   padding: 12px 20px;          /* 縦を小さめにして砂浜が隠れにくいように */
 }
@@ -178,20 +192,20 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
   bottom: 8px;
   font-size: .68rem;
   letter-spacing: .02em;
-  color: #6b6458;              /* 背景になじむ控えめな色 */
-  opacity: .35;                /* ふだんはほとんど目立たない */
+  color: #6b5c3c;              /* 砂色になじむ控えめな茶 */
+  opacity: .4;                 /* ふだんはほとんど目立たない */
   text-decoration: none;
   transition: opacity .25s, color .25s;
 }
 .secret-link:hover,
 .secret-link:focus {
   opacity: 1;
-  color: #ffcf8f;
+  color: var(--accent-dk);
   text-decoration: none;
 }
-.access-count { margin: 0 0 6px; font-size: 1.05rem; }
-.access-count span { font-weight: 800; color: #ffcf8f; font-size: 1.25em; }
-.copyright { margin: 0; font-size: .8rem; color: #b8b1a3; }
+.access-count { margin: 0 0 6px; font-size: 1.05rem; font-weight: 700; }
+.access-count span { font-weight: 800; color: var(--accent-dk); font-size: 1.25em; }
+.copyright { margin: 0; font-size: .8rem; color: rgba(44, 42, 38, .6); }
 
 /* ---------- 秘密ページ（謎解き） ---------- */
 .layout--secret { grid-template-columns: 1fr; max-width: 720px; }
@@ -323,6 +337,13 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
     #22335d 80%,
     #34496f 100%);
 }
+
+  /* 文字の打ち消し線（CSS で二重線にする） */
+.double-line {
+  text-decoration-line: line-through;
+  text-decoration-style: double;
+}
+
 
 /* 月とそのぼんやりした光 */
 .scene__moon {
