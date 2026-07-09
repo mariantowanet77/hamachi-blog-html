@@ -14,6 +14,10 @@
     .anim-demo__wave { display: block; margin: 8px 0; max-width: 100%; }
     .anim-demo__pop { display: inline-block; margin: 4px 0 0; padding: 8px 14px; border-radius: 999px; background: var(--accent); color: #fff; }
     .anim-demo__pop code { background: rgba(255,255,255,.25); padding: 1px 6px; border-radius: 6px; }
+    /* ナイフデモの埋め込み枠（CodePen風に iframe で隔離） */
+    .anim-demo__embed { margin: 12px 0 4px; border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(0,0,0,.18); background: #000; }
+    .anim-demo__embed iframe { display: block; width: 100%; height: 340px; border: 0; }
+    .anim-demo__cap { margin: 2px 0 0; font-size: .85em; color: #8a7a66; }
   </style>
 </head>
 <body data-base="/">
@@ -32,20 +36,19 @@
       <p><a href="/pastarticles/">← 過去の記事に戻る</a></p>
       <article>
         <div class="card__meta">
-          <span class="tag">日記</span>
-          <time datetime="2026-06-18">2026-06-18</time>
+          <span class="tag">技術</span>
+          <time datetime="2026-07-09">2026-07-09</time>
         </div>
         <h1 data-anim="fade-up">アニメーションを作ろう！_ナイフ編</h1>
-        <p>はじめまして。「はまち日和」を始めました。
-           この記事はひな形に付属しているサンプル記事です。</p>
-        <p>このページが、1記事＝1フォルダ＝1つの <code>index.html</code> の見本になります。
-           新しい記事を書くときは、このフォルダ
-           （<code>pastarticles/hello-world/</code>）ごとコピーして名前を変えるのが簡単です。</p>
-        <h2>画像を入れたいときは</h2>
-        <p>画像は <code>assets</code> 側の同じ名前のフォルダ
-           （<code>assets/pastarticles/hello-world/</code>）に置き、次のように読み込みます。</p>
-        <pre><code>&lt;img src="/assets/pastarticles/hello-world/photo.jpg" alt="説明"&gt;</code></pre>
-        <p>絶対パス（<code>/assets/...</code>）で書けば、どの階層の記事からでも同じ書き方で読み込めます。</p>
+        <p>第二回ということで、今回はアニメーションについて何か記事が書けたらと思います。<br>
+          　皆さんは<a href = "https://youtu.be/XHtQO0aLEKI?si=kEaQIiAEBlyvVH9n">【B.B.K.K.B.K.K】</a>ってご存じですか？懐かしいと思う方もいるかと思います。音MADの定番曲みたいな感じですね
+          今回はそれっぽいモノクロ＋ピクトグラムのアニメーションを作ってみよう！という回です。</p>
+        <h2>まずご準備編</h2>
+        <p>作ろう！とはいったものの、私がそもそもweb系のjsのフェード等の簡単なアニメーション以外のものを作るのが初めてだったりします。
+          
+        </p>
+        
+
 
         <!-- ▼ アニメーション（SVG + GSAP）のデモ。不要ならこの <section> ごと消してOK -->
         <section class="anim-demo">
@@ -71,6 +74,13 @@
                   fill="none" stroke="#b5651d" stroke-width="3" stroke-linecap="round"/>
           </svg>
           <p class="anim-demo__pop" data-anim="pop">この箱は記事専用プリセット <code>pop</code> で出現します。</p>
+
+          <h3 data-anim="fade-up" style="margin:1.4em 0 .3em; border:none; padding:0;">ナイフ発射デモ 🔪（この記事の本題）</h3>
+          <p data-anim="fade-up">白黒シルエットのナイフを、フェードイン → 45°回転 → 水平発射。枠内をクリックすると何本でも発射できます。</p>
+          <div class="anim-demo__embed" data-anim="scale-in">
+            <iframe src="knife-demo.html" title="ナイフ発射アニメ（1bitシルエット）" loading="lazy"></iframe>
+          </div>
+          <p class="anim-demo__cap"><a href="knife-demo.html" target="_blank" rel="noopener">別ウィンドウで開く ↗</a></p>
         </section>
       </article>
     </main>
