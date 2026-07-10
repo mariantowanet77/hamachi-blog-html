@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>クナイ多層一斉射出アニメ — 1bitシルエット</title>
+<style>
+  /* 白黒のみ：背景=黒 / クナイ=白。グラデ・影・輪郭線・ぼかしは一切なし */
+  html, body { margin: 0; height: 100%; background: #000000; overflow: hidden; }
+  #stage { position: fixed; inset: 0; }
+  .knife { position: absolute; left: 0; top: 0; will-change: transform, opacity; }
+  .knife .kn-w { fill: #FFFFFF; }   /* 白：刃・首・柄・リング */
+  .knife .kn-b { fill: #000000; }   /* 黒：柄の巻き溝（背景と同色にして溝＝握りの質感に見せる） */
+
+  .hint {
+    position: fixed; left: 12px; top: 10px; z-index: 10;
+    font: 12px/1.6 "Segoe UI", system-ui, sans-serif; color: #FFFFFF;
+    user-select: none; opacity: .7;
+  }
+  .hint button { font: inherit; color: #fff; background: #222; border: 1px solid #555; border-radius: 6px; padding: 2px 10px; cursor: pointer; }
+  .hint button:hover { background: #333; }
+</style>
+</head>
+<body>
+  <p class="hint">画面クリック ／ <button id="replay" type="button">もう一度</button> で再生 ・ コンソールで <code>volley.play()</code></p>
+  <div id="stage"></div>
+
+  <!-- クナイのシルエット（複製元）：刃・首・柄・リング＋巻き溝。回転0 = ← 水平で刃先が左 -->
+  <template id="knife-tpl">
+    <svg class="knife" width="150" height="33" viewBox="0 0 180 40" aria-hidden="true">
+      <path class="kn-w" d="M8 20 L58 7 L104 15 L104 25 L58 33 Z"/>
+      <path class="kn-w" d="M104 18 L120 18 L120 22 L104 22 Z"/>
+      <path class="kn-w" d="M121 15 L147 15 Q152 15 152 20 Q152 25 147 25 L121 25 Q116 25 116 20 Q116 15 121 15 Z"/>
+      <path class="kn-w" fill-rule="evenodd" d="M151 20 a11 11 0 1 0 22 0 a11 11 0 1 0 -22 0 M156 20 a6 6 0 1 0 12 0 a6 6 0 1 0 -12 0"/>
+      <path class="kn-b" d="M127 16 L129.5 16 L124 24 L121.5 24 Z"/>
+      <path class="kn-b" d="M134 16 L136.5 16 L131 24 L128.5 24 Z"/>
+      <path class="kn-b" d="M141 16 L143.5 16 L138 24 L135.5 24 Z"/>
+    </svg>
+  </template>
+
+  <script src="../../common/vendor/gsap.min.js"></script>
+  <script>
+  /* =====================================================================
+     クナイ多層一斉射出アニメ（1bitシルエット）
+       ① 左下に「見えないターゲット」を用意（表示はしない）
+       ② クナイを 4層（半径 500/620/740/860）に展開。各層は少しずつ角度をずらして
+          隙間を埋め、密度を高める。ターゲット中心の円周上に配置。
+       ③ Layer1 から順に、各層内は角度昇順で 70ms 間隔に生成
+          ・生成と同時に opacity 0→1（0.15s）＋「狙い角-45°→狙い角」へ回転（0.15s, ease-out）
+       ④ 全部の生成・回転が終わるまで待つ
+       ⑤ 全クナイを同時発射：ターゲット方向へ一直線・等速・高速（弾丸/レールガン）
+          ・刃先は進行方向（＝ターゲット方向）を向いたまま
+       ⑥ ターゲット通過後もそのまま飛び、画面外で削除
+
+     ※ 狙い角は「ターゲット - クナイ座標」の方向から算出（刃先が必ずターゲットを向く）。
+        レイヤー情報は配列 LAYERS で管理。volley.play() で再生。?still で配置だけ静止表示。
+     ===================================================================== */
+  window.volley = (function () {
+    var gsap  = window.gsap;
+    var stage = document.getElementById('stage');
+    var tpl   = document.getElementById('knife-tpl');
+    var STILL = /still/.test(location.search);   // 検証用：配置だけ静止表示
+
+    /* ==== 仕様の定数 ==== */
+    // レイヤー：radius=半径, start/end=角度範囲, step=層内の角度刻み
+    var LAYERS = [
+      { radius: 500, start: 0.0, end: 40.0, step: 5, extra: [] },
+      { radius: 620, start: 2.5, end: 42.5, step: 5, extra: [] },
+      { radius: 740, start: 5.0, end: 45.0, step: 5, extra: [0] },   // 3列目：0°を1本足して下端の寂しさを埋める
+      { radius: 860, start: 7.5, end: 47.5, step: 5, extra: [2.5] }  // 4列目：7.5°の1段下=2.5°を1本足す（層4グリッド上・層3の0°とずれて重ならない）
+    ];
+    var TARGET_X      = 150;   // 見えないターゲットX（左下）
+    var TARGET_BOTTOM = 100;   // 画面下からの距離 → target.y = 画面高 - 100
+    var GEN_INTERVAL  = 50;    // 生成間隔（ms）
+    var FADE_DUR      = 0.05;  // フェードイン（秒）
+    var ROT_DUR       = 0.10;  // 回転（秒）
+    var PRE_ROT       = 45;    // 初期角 = 狙い角 - 45°
+    var FIRE_SPEED    = 5000;  // 発射速度（px/秒）※高速
+    var FIRE_MARGIN   = 1700;  // ターゲット通過後に飛ぶ距離（px）
+    var KNIFE_W = 150, KNIFE_H = 33;
+
+    var master = null, live = [];
+
+    function clear() {
+      if (master) { master.kill(); master = null; }
+      live.forEach(function (el) { el.remove(); });
+      live = [];
+    }
+
+    function play() {
+      clear();
+      var vw = window.innerWidth, vh = window.innerHeight;
+      var target = { x: TARGET_X, y: vh - TARGET_BOTTOM };
+      master = gsap.timeline();
+
+      // 全クナイの (角度, 半径) を生成順に列挙：Layer1→Layer4、各層は角度昇順
+      var items = [];
+      LAYERS.forEach(function (L) {
+        var angs = (L.extra || []).slice();
+        for (var deg = L.start; deg <= L.end + 1e-9; deg += L.step) angs.push(deg);
+        angs.sort(function (a, b) { return a - b; });   // 追加分も含め角度昇順（＝下から順）に生成
+        angs.forEach(function (deg) { items.push({ deg: deg, radius: L.radius }); });
+      });
+
+      var total = items.length;
+      // 全生成・回転が終わる時刻（＝一斉発射の開始時刻）
+      var fireStart = (total - 1) * (GEN_INTERVAL / 1000) + Math.max(FADE_DUR, ROT_DUR) + 0.08;
+
+      items.forEach(function (it, i) {
+        var a = it.deg * Math.PI / 180;
+        // 配置：ターゲット中心・半径 radius の円周上（yは上向きに測るので引く）
+        var pos = { x: target.x + Math.cos(a) * it.radius, y: target.y - Math.sin(a) * it.radius };
+        // ターゲットへの方向ベクトル（発射方向）
+        var dir = { x: target.x - pos.x, y: target.y - pos.y };
+        var len = Math.hypot(dir.x, dir.y) || 1;
+        var nx = dir.x / len, ny = dir.y / len;
+        // 刃先（回転0で左向き）をターゲットへ向ける回転角
+        var aim = Math.atan2(dir.y, dir.x) * 180 / Math.PI - 180;
+        var initRot = aim - PRE_ROT;
+
+        var k = tpl.content.firstElementChild.cloneNode(true);
+        k.style.left = (pos.x - KNIFE_W / 2) + 'px';
+        k.style.top  = (pos.y - KNIFE_H / 2) + 'px';
+        stage.appendChild(k);
+        live.push(k);
+
+        if (STILL) {                       // 検証用：最終状態で静止
+          gsap.set(k, { opacity: 1, rotation: aim, x: 0, y: 0, transformOrigin: '50% 50%' });
+          return;
+        }
+
+        gsap.set(k, { opacity: 0, rotation: initRot, x: 0, y: 0, transformOrigin: '50% 50%' });
+
+        var t = i * (GEN_INTERVAL / 1000);
+        // 生成：フェードイン＋同時に回転（ease-out）
+        master.to(k, { opacity: 1, duration: FADE_DUR, ease: 'none' }, t)
+              .to(k, { rotation: aim, duration: ROT_DUR, ease: 'power2.out' }, t);
+        // 一斉発射：ターゲット方向へ一直線・等速・高速。通過後も飛んで画面外で削除
+        var travel = it.radius + FIRE_MARGIN;
+        var fireDur = travel / FIRE_SPEED;
+        master.to(k, {
+          x: nx * travel, y: ny * travel, duration: fireDur, ease: 'none',
+          onComplete: function () { k.remove(); }
+        }, fireStart);
+      });
+
+      return master;
+    }
+
+    stage.addEventListener('pointerdown', function () { play(); });
+    var btn = document.getElementById('replay');
+    if (btn) btn.addEventListener('click', function (e) { e.stopPropagation(); play(); });
+    if (STILL) { play(); }                                        // 検証：即・配置表示
+    else { window.addEventListener('load', function () { setTimeout(play, 400); }); }
+
+    return { play: play };
+  })();
+  </script>
+</body>
+</html>

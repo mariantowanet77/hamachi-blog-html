@@ -17,7 +17,17 @@
     /* ナイフデモの埋め込み枠（CodePen風に iframe で隔離） */
     .anim-demo__embed { margin: 12px 0 4px; border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(0,0,0,.18); background: #000; }
     .anim-demo__embed iframe { display: block; width: 100%; height: 340px; border: 0; }
-    .anim-demo__cap { margin: 2px 0 0; font-size: .85em; color: #8a7a66; }
+    /* Qiita風コードブロック（ファイル名バー＋コピーボタン＋ダークなコード欄） */
+    .codeblock { margin: 1.2em 0; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; background: #0d1117; }
+    .codeblock__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; background: #161b22; border-bottom: 1px solid #30363d; }
+    .codeblock__name { color: #c9d1d9; font: 600 12px/1 "Segoe UI", system-ui, sans-serif; }
+    .codeblock__copy { appearance: none; border: 1px solid #30363d; background: #21262d; color: #c9d1d9; padding: 4px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .codeblock__copy:hover { background: #30363d; }
+    .codeblock__copy.is-done { color: #7ee787; border-color: #2ea043; }
+    .codeblock pre { margin: 0; padding: 14px 16px; max-height: 460px; overflow: auto; }
+    .codeblock code { display: block; font-family: Consolas, "SFMono-Regular", ui-monospace, Menlo, monospace; font-size: 13px; line-height: 1.65; color: #e6edf3; white-space: pre; tab-size: 2; }
+    /* YouTube 埋め込みを中央寄せ（狭い画面でもはみ出さないよう 16:9 で可変） */
+    .yt-embed { display: block; margin: 12px auto; max-width: 100%; aspect-ratio: 16 / 9; height: auto; }
   </style>
 </head>
 <body data-base="/">
@@ -40,48 +50,49 @@
           <time datetime="2026-07-09">2026-07-09</time>
         </div>
         <h1 data-anim="fade-up">アニメーションを作ろう！_ナイフ編</h1>
-        <p>第二回ということで、今回はアニメーションについて何か記事が書けたらと思います。<br>
-          　皆さんは<a href = "https://youtu.be/XHtQO0aLEKI?si=kEaQIiAEBlyvVH9n">【B.B.K.K.B.K.K】</a>ってご存じですか？懐かしいと思う方もいるかと思います。音MADの定番曲みたいな感じですね
-          今回はそれっぽいモノクロ＋ピクトグラムのアニメーションを作ってみよう！という回です。</p>
-        <h2>まずご準備編</h2>
-        <p>作ろう！とはいったものの、私がそもそもweb系のjsのフェード等の簡単なアニメーション以外のものを作るのが初めてだったりします。
-          
+        <p>第二回ということで、今回はアニメーションについて何か記事が書けたらと思います。どうもはまちです。去年よりはマシですが、どんどん暑くなってきてますね。自分が今働いてるところだと蝉が鳴いてないので、ちょっと夏の風情がなくて寂しいなと思う次第であります。<br>
+          　ところで皆さんは【B.B.K.K.B.K.K】ってご存じですか？<br>
+          <iframe class="yt-embed" width="560" height="315" src="https://www.youtube-nocookie.com/embed/XHtQO0aLEKI?si=AdOIe85Tl-ikQLfx" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+          <br>懐かしいと思う方もいるんじゃないでしょうか。<span class="double-line">ニコニコで流行ってた某音MADしか私は頭に浮かびませんが</span><br>
+          それに似たような感じで、今回はナイフを刺すアニメーションをモノクロアニメーションで作ってみよう！という回です。</p>
+        <h2>さっそく作ってみましょうか編</h2>
+        <p>
+          まずは、ナイフを発射するアニメーションを作る前にどういった流れでにするのかある程度整理したいと思います。<br>
+          自分が作りたい流れとしては、<br>
+          ① ナイフが出現する（フェードイン）<br>
+          ② ナイフが回転する（45° → 水平）<br
+>         ③ ナイフが発射される（水平一直線に)<br>
+          っていう流れでまずは作成します。Let's go!!<br>
         </p>
-        
-
-
-        <!-- ▼ アニメーション（SVG + GSAP）のデモ。不要ならこの <section> ごと消してOK -->
-        <section class="anim-demo">
-          <h2 data-anim="fade-up">
-            アニメーションのデモ
-            <svg id="demo-star" width="26" height="26" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 2l2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z"
-                    fill="#f2c14e" stroke="#b5651d" stroke-width="1"/>
-            </svg>
-          </h2>
-          <p data-anim="fade-up" data-anim-delay="0.1">
-            画面に入ると各要素がふわっと現れます（スクロールで発火）。
-            演出は <code>data-anim</code> 属性を付けるだけ。
-          </p>
-          <ul data-anim="stagger" data-anim-stagger="0.1">
-            <li>下からフェード（<code>fade-up</code>）</li>
-            <li>順番に表示（<code>stagger</code>）</li>
-            <li>拡大表示（<code>scale-in</code>）</li>
-            <li>SVG の線画（<code>draw</code>）</li>
-          </ul>
-          <svg class="anim-demo__wave" data-anim="draw" viewBox="0 0 300 80" width="300" height="80" aria-hidden="true">
-            <path d="M2 40 Q 40 8, 78 40 T 154 40 T 230 40 T 298 40"
-                  fill="none" stroke="#b5651d" stroke-width="3" stroke-linecap="round"/>
-          </svg>
-          <p class="anim-demo__pop" data-anim="pop">この箱は記事専用プリセット <code>pop</code> で出現します。</p>
+        <h2>↓↓↓アニメーションのコード</h2><p>※一部デザインや実装の際(コメントアウト等)にAIを使用しています。</p>
+      
+        <!-- Qiita風コードブロック：knife-demo.html の中身を fetch で読み込んで表示（実物と常に一致・手打ち不要） -->
+        <div class="codeblock" data-anim="fade-up">
+          <div class="codeblock__head">
+            <span class="codeblock__name">knife-demo.html</span>
+            <button class="codeblock__copy" type="button">🗒️</button>
+          </div>
+          <pre><code class="code-src" data-src="knife-demo.html">読み込み中…</code></pre>
+        </div>
 
           <h3 data-anim="fade-up" style="margin:1.4em 0 .3em; border:none; padding:0;">ナイフ発射デモ 🔪（この記事の本題）</h3>
-          <p data-anim="fade-up">白黒シルエットのナイフを、フェードイン → 45°回転 → 水平発射。枠内をクリックすると何本でも発射できます。</p>
+          <p data-anim="fade-up">白黒シルエットのクナイを、フェードイン → 45°回転 → 水平発射。枠内をクリックすると何本でも発射できます。</p>
           <div class="anim-demo__embed" data-anim="scale-in">
-            <iframe src="knife-demo.html" title="ナイフ発射アニメ（1bitシルエット）" loading="lazy"></iframe>
+            <iframe class="demo-frame" data-src="knife-demo.html" title="ナイフ発射（シルエットアニメーション）" loading="lazy"></iframe>
           </div>
-          <p class="anim-demo__cap"><a href="knife-demo.html" target="_blank" rel="noopener">別ウィンドウで開く ↗</a></p>
-        </section>
+          <p>っていう感じで一旦完成です。お疲れ様でした。と言いたいところですが</p>
+          <h2>本命はこちら！</h2>
+          <h3>足りない！なんかこれだけだと寂しいしなんかもっと欲しい！ということで、もう一つ作ることを決めました。その内容としては、何個もクナイを出して、最後はターゲットに向かって飛ばすってやつがやりたいんですよ。
+            昨夜さんみたいなのがやりたいの私は！！</h3>
+          <p>ということで、今のを改良してもう一個作ろうと思います。構想としては、<br>
+            ①左下の端に架空のターゲット(見えないように)作成<br>
+            ②ナイフを複数、地面から見て40度までに5度ごとにクナイをを設置。クナイは5度ごとに前のナイフの-5度から回転をスタート(1つ目...-45度→0度に回転、2つ目...-50度→-5度に回転、3つ目...-55度→-10度に回転)、また並ぶ場所として、見えないターゲットから半径500pxの演習に設置(仮)。全部設置し終わるまで待つ。<br>
+            ③ナイフが回転し終わったら、ターゲットに向かって一気に全部飛ばす(ターゲットの座標を取得して、そこに向かって飛ばす)<br>
+            っていう流れを想定してます。
+          </p>
+          <h2>作った結果がこちら</h2>
+          <div class="anim-demo__embed" data-anim="scale-in">
+            <iframe class="demo-frame" data-src="knife-demo2.html" title="ナイフ発射（シルエットアニメーション）" loading="lazy"></iframe>
       </article>
     </main>
     <aside class="sidebar">
@@ -102,5 +113,37 @@
   <script src="/common/vendor/ScrollTrigger.min.js"></script>
   <script src="/common/anim.js"></script>
   <script src="anim.js"></script>
+  <!-- 埋め込みデモ＆コードブロック：常に最新版を読み込む（キャッシュ回避）＋コピーボタン -->
+  <script>
+    (function () {
+      // 更新した knife-demo.html が必ず反映されるよう、キャッシュ回避のパラメータを付ける
+      var bust = '?v=' + Date.now();
+
+      // 埋め込み iframe：最新版のデモを読み込む
+      document.querySelectorAll('.demo-frame[data-src]').forEach(function (f) {
+        f.src = f.dataset.src + bust;
+      });
+
+      // コード欄：ファイルを読み込み「そのままの文字」で表示（textContent が自動エスケープ）
+      document.querySelectorAll('.code-src[data-src]').forEach(function (el) {
+        fetch(el.dataset.src + bust)
+          .then(function (r) { return r.text(); })
+          .then(function (t) { el.textContent = t.replace(/\s+$/, ''); })
+          .catch(function () { el.textContent = '（コードの読み込みに失敗しました。ページは http 経由で開いてください）'; });
+      });
+
+      // コピーボタン（押すと一瞬フィードバックし、元の表示に戻す＝絵文字などの見た目を保持）
+      document.querySelectorAll('.codeblock__copy').forEach(function (btn) {
+        var orig = btn.textContent;
+        btn.addEventListener('click', function () {
+          var code = btn.closest('.codeblock').querySelector('code').textContent;
+          navigator.clipboard.writeText(code).then(function () {
+            btn.textContent = '✓'; btn.classList.add('is-done');
+            setTimeout(function () { btn.textContent = orig; btn.classList.remove('is-done'); }, 1500);
+          });
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
