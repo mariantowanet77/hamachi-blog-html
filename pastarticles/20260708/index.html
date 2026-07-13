@@ -17,6 +17,9 @@
     /* ナイフデモの埋め込み枠（CodePen風に iframe で隔離） */
     .anim-demo__embed { margin: 12px 0 4px; border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(0,0,0,.18); background: #000; }
     .anim-demo__embed iframe { display: block; width: 100%; height: 340px; border: 0; }
+    /* 多層デモ用の大きい埋め込み枠：アスペクト比 1120:920。中のアニメが枠サイズに自分で合わせる（等倍iframe＝クリック位置も正確） */
+    .anim-demo__embed--lg { width: 100%; aspect-ratio: 1120 / 920; margin: 12px 0 4px; border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(0,0,0,.18); background: #000; }
+    .anim-demo__embed--lg iframe { display: block; width: 100%; height: 100%; border: 0; }
     /* Qiita風コードブロック（ファイル名バー＋コピーボタン＋ダークなコード欄） */
     .codeblock { margin: 1.2em 0; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; background: #0d1117; }
     .codeblock__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; background: #161b22; border-bottom: 1px solid #30363d; }
@@ -75,15 +78,14 @@
           <pre><code class="code-src" data-src="knife-demo.html">読み込み中…</code></pre>
         </div>
 
-          <h3 data-anim="fade-up" style="margin:1.4em 0 .3em; border:none; padding:0;">ナイフ発射デモ 🔪（この記事の本題）</h3>
+          <h3 data-anim="fade-up" style="margin:1.4em 0 .3em; border:none; padding:0;">ナイフ発射デモ 🔪</h3>
           <p data-anim="fade-up">白黒シルエットのクナイを、フェードイン → 45°回転 → 水平発射。枠内をクリックすると何本でも発射できます。</p>
           <div class="anim-demo__embed" data-anim="scale-in">
             <iframe class="demo-frame" data-src="knife-demo.html" title="ナイフ発射（シルエットアニメーション）" loading="lazy"></iframe>
           </div>
           <p>っていう感じで一旦完成です。お疲れ様でした。と言いたいところですが</p>
           <h2>本命はこちら！</h2>
-          <h3>足りない！なんかこれだけだと寂しいしなんかもっと欲しい！ということで、もう一つ作ることを決めました。その内容としては、何個もクナイを出して、最後はターゲットに向かって飛ばすってやつがやりたいんですよ。
-            </h3>
+          <h3>足りない！なんかこれだけだと寂しいしなんかもっと欲しい！</h3>ということで、もう一つ作ることを決めました。その内容としては、何個もクナイを出して、最後はターゲットに向かって飛ばすってやつがやりたいんですよ。
           <p>ということで、今のを改良してもう一個作ろうと思います。構想としては、<br>
             ①左下の端に架空のターゲット(見えないように)作成<br>
             ②ナイフを複数、重ならないように設置<br>
@@ -100,8 +102,17 @@
           </div>
           <pre><code class="code-src" data-src="knife-demo.html">読み込み中…</code></pre>
         </div>
-          <div class="anim-demo__embed" data-anim="scale-in">
-            <iframe class="demo-frame" data-src="knife-demo2.html" title="ナイフ発射（シルエットアニメーション）" loading="lazy"></iframe>
+         <h3 data-anim="fade-up" style="margin:1.4em 0 .3em; border:none; padding:0;">複数ナイフ発射デモ 🔪</h3>
+         <p data-anim="fade-up">クリックするとアニメーションが再生されます。</p>
+          <div class="anim-demo__embed--lg" data-anim="scale-in">
+            <iframe class="demo-frame" data-src="knife-demo2.html" title="クナイ多層一斉射出（シルエットアニメーション）" loading="lazy"></iframe>
+          </div>
+          <p>っていう感じでひとまず完成です。他にも一気にクナイを出現させて針千本みたいに断続的に飛ばすみたいなアニメージョンもできるので、ものを飛ばすっていうのも結構楽しい作業でした。
+            でもこれがjsで何の役に立つの？って言われたら知りません。自分が好きでやってんだからいいんでしょうが🥴👍
+          </p>
+          <p>次回はこのブログにハンバーガーメニューを作ろうと思ってます。大体察せると思いますが、このブログ、元々のレイアウトはClaudeにテンプレートで作らせたものなので、ちょっと味気ないというかAIっぽさが拭えないんですよね。
+            そこで次はちょっと自分でもカスタマイズして、自分なりのものを少しずつ作れたらと思います。また次回お会いしましょう！
+          </p>
       </article>
     </main>
     <aside class="sidebar">

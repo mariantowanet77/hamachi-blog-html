@@ -79,6 +79,8 @@
     var FIRE_SPEED    = 5000;  // 発射速度（px/秒）※高速
     var FIRE_MARGIN   = 1700;  // ターゲット通過後に飛ぶ距離（px）
     var KNIFE_W = 150, KNIFE_H = 33;
+    // 基準キャンバス：この大きさに扇がちょうど収まる。実際の画面サイズに合わせて全体を等比スケールする
+    var DESIGN_W = 1120, DESIGN_H = 920;
 
     var master = null, live = [];
 
@@ -91,7 +93,9 @@
     function play() {
       clear();
       var vw = window.innerWidth, vh = window.innerHeight;
-      var target = { x: TARGET_X, y: vh - TARGET_BOTTOM };
+      // 画面（枠）サイズに合わせて全体を等比スケール：枠がどんな大きさでも扇が収まる
+      var s = Math.min(vw / DESIGN_W, vh / DESIGN_H);
+      var target = { x: TARGET_X * s, y: vh - TARGET_BOTTOM * s };
       master = gsap.timeline();
 
       // 全クナイの (角度, 半径) を生成順に列挙：Layer1→Layer4、各層は角度昇順
@@ -109,8 +113,9 @@
 
       items.forEach(function (it, i) {
         var a = it.deg * Math.PI / 180;
+        var radius = it.radius * s;   // 半径もスケール
         // 配置：ターゲット中心・半径 radius の円周上（yは上向きに測るので引く）
-        var pos = { x: target.x + Math.cos(a) * it.radius, y: target.y - Math.sin(a) * it.radius };
+        var pos = { x: target.x + Math.cos(a) * radius, y: target.y - Math.sin(a) * radius };
         // ターゲットへの方向ベクトル（発射方向）
         var dir = { x: target.x - pos.x, y: target.y - pos.y };
         var len = Math.hypot(dir.x, dir.y) || 1;
@@ -119,9 +124,12 @@
         var aim = Math.atan2(dir.y, dir.x) * 180 / Math.PI - 180;
         var initRot = aim - PRE_ROT;
 
+        var kw = KNIFE_W * s, kh = KNIFE_H * s;   // クナイの大きさもスケール
         var k = tpl.content.firstElementChild.cloneNode(true);
-        k.style.left = (pos.x - KNIFE_W / 2) + 'px';
-        k.style.top  = (pos.y - KNIFE_H / 2) + 'px';
+        k.setAttribute('width', kw);
+        k.setAttribute('height', kh);
+        k.style.left = (pos.x - kw / 2) + 'px';
+        k.style.top  = (pos.y - kh / 2) + 'px';
         stage.appendChild(k);
         live.push(k);
 
@@ -137,10 +145,11 @@
         master.to(k, { opacity: 1, duration: FADE_DUR, ease: 'none' }, t)
               .to(k, { rotation: aim, duration: ROT_DUR, ease: 'power2.out' }, t);
         // 一斉発射：ターゲット方向へ一直線・等速・高速。通過後も飛んで画面外で削除
-        var travel = it.radius + FIRE_MARGIN;
-        var fireDur = travel / FIRE_SPEED;
+        var travelDesign = it.radius + FIRE_MARGIN;
+        var fireDur = travelDesign / FIRE_SPEED;   // 所要時間はサイズ非依存（見た目の速さを一定に）
+        var disp = travelDesign * s;               // 実際の移動量は枠サイズに合わせてスケール
         master.to(k, {
-          x: nx * travel, y: ny * travel, duration: fireDur, ease: 'none',
+          x: nx * disp, y: ny * disp, duration: fireDur, ease: 'none',
           onComplete: function () { k.remove(); }
         }, fireStart);
       });
