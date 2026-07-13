@@ -127,7 +127,7 @@ const ARTICLES = [
   // --- 記事のいいねボタン（Lambda(Java) + DynamoDB｜localStorageで自分の状態を記憶） ---
   // 記事ページのカテゴリ（.tag）の横にハート型のトグルボタンを差し込みます。
   // LIKE_API_URL が空（デプロイ前）の間は何も表示しません。
-  const LIKE_API_URL = ''; // 例: 'https://xxxx.lambda-url.ap-northeast-1.on.aws/'
+  const LIKE_API_URL = 'https://nfnfwtchy4khy4nqi3bjsj463a0xndnv.lambda-url.ap-northeast-1.on.aws/'; // 例: 'https://xxxx.lambda-url.ap-northeast-1.on.aws/'
   // 一覧のカード（article.card）ではなく、記事本文の先頭にあるメタ欄だけが対象
   const likeMeta = document.querySelector('article:not(.card) .card__meta');
   // 記事ID = pastarticles/ 直下のフォルダ名（例: 20260708, hello-world）
