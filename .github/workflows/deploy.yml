@@ -23,7 +23,8 @@ jobs:
           aws-region: ap-northeast-1
 
       # 静的サイトなのでビルド不要。リポジトリの中身をそのままS3へ同期する。
-      # メタファイル（.git / .github / README / .gitignore）は除外。
+      # メタファイル（.git / .github / README / .gitignore）と
+      # バックエンドのソース（backend/ … いいねAPI用の Java コード）は除外。
       - name: Deploy to S3
         run: |
           aws s3 sync . s3://mariantowa-blog-prod \
@@ -31,7 +32,8 @@ jobs:
             --exclude ".git/*" \
             --exclude ".github/*" \
             --exclude "README.md" \
-            --exclude ".gitignore"
+            --exclude ".gitignore" \
+            --exclude "backend/*"
 
       - name: Invalidate CloudFront cache
         run: aws cloudfront create-invalidation --distribution-id E1YK5BA03SBP4M --paths "/*"
