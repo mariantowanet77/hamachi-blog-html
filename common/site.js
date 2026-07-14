@@ -124,6 +124,85 @@ const ARTICLES = [
       });
   }
 
+  // --- 記事のいいねボタン（Lambda(Java) + DynamoDB｜localStorageで自分の状態を記憶） ---
+  // 記事ページのカテゴリ（.tag）の横にハート型のトグルボタンを差し込みます。
+  // LIKE_API_URL が空（デプロイ前）の間は何も表示しません。
+  const LIKE_API_URL = 'https://nfnfwtchy4khy4nqi3bjsj463a0xndnv.lambda-url.ap-northeast-1.on.aws/'; // 例: 'https://xxxx.lambda-url.ap-northeast-1.on.aws/'
+  // 一覧のカード（article.card）ではなく、記事本文の先頭にあるメタ欄だけが対象
+  const likeMeta = document.querySelector('article:not(.card) .card__meta');
+  // 記事ID = pastarticles/ 直下のフォルダ名（例: 20260708, hello-world）
+  const likeMatch = location.pathname.match(/\/pastarticles\/([A-Za-z0-9_-]+)\//);
+  if (LIKE_API_URL && likeMeta && likeMatch) {
+    const articleId = likeMatch[1];
+    const storageKey = 'hamachi_liked_' + articleId;
+
+    let liked = false;
+    try { liked = localStorage.getItem(storageKey) === '1'; } catch (e) {}
+    let likes = null;   // サーバー上のいいね数（取得できるまで null）
+    let busy = false;   // 連打で API を叩きすぎないように
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'like-btn';
+    btn.innerHTML =
+      '<span class="like-btn__heart" aria-hidden="true">♥</span>' +
+      '<span class="like-btn__count">…</span>';
+    likeMeta.appendChild(btn);
+    const likeCountEl = btn.querySelector('.like-btn__count');
+
+    function renderLike() {
+      btn.classList.toggle('is-liked', liked);
+      btn.setAttribute('aria-pressed', liked ? 'true' : 'false');
+      btn.setAttribute('aria-label', liked ? 'いいねを取り消す' : 'いいねする');
+      likeCountEl.textContent = likes === null ? '…' : Number(likes).toLocaleString('ja-JP');
+    }
+    renderLike();
+
+    // 現在のいいね数を取得
+    fetch(LIKE_API_URL + '?article=' + articleId)
+      .then(function (res) { return res.json(); })
+      .then(function (data) { likes = data.likes; renderLike(); })
+      .catch(function (e) {
+        likeCountEl.textContent = '—';
+        console.warn('いいね数の取得に失敗:', e);
+      });
+
+    btn.addEventListener('click', function () {
+      if (busy || likes === null) return;
+      busy = true;
+
+      // 先に見た目を切り替える（楽観的更新）。失敗したら戻す。
+      const prevLiked = liked;
+      const prevLikes = likes;
+      liked = !liked;
+      likes = Math.max(0, likes + (liked ? 1 : -1));
+      renderLike();
+
+      fetch(LIKE_API_URL, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ article: articleId, action: liked ? 'like' : 'unlike' }),
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          likes = data.likes; // サーバーの正確な数に合わせる
+          try { localStorage.setItem(storageKey, liked ? '1' : '0'); } catch (e) {}
+        })
+        .catch(function (e) {
+          liked = prevLiked;
+          likes = prevLikes;
+          console.warn('いいねの送信に失敗:', e);
+        })
+        .then(function () { // 成否どちらでも最終状態を描画
+          busy = false;
+          renderLike();
+        });
+    });
+  }
+
   // --- タイトルのタイプライター演出 ---
   // data-typewriter を付けた要素の文字を、1文字ずつカタカタと表示します。
   // data-typewriter の値 = 「1文字あたりの表示間隔(ミリ秒)」。省略時は 110。

@@ -22,6 +22,7 @@ about/                          このブログについて
 pastarticles/                   記事一覧 + 各記事フォルダ（例: 20260708/）
 secret/                         隠しページ（マインスイーパー）
 assets/                         画像など
+backend/like-api/               記事いいねAPI（Java / Lambda + DynamoDB｜S3には同期しない）
 .github/workflows/deploy.yml    自動デプロイ設定
 ```
 
@@ -30,6 +31,16 @@ assets/                         画像など
 1. `pastarticles/` に記事フォルダを作り、`index.html` を置く
 2. `common/site.js` の `ARTICLES` 配列の先頭に記事情報を追記
 3. `git push` すると自動で公開される
+
+## 記事いいねAPI（Java / サーバーレス）
+
+記事ページのカテゴリ横に「いいね」ボタンがあり、Lambda（**Java 21**）+ DynamoDB +
+Function URL で数を管理しています。訪問者カウンターと同じサーバーレス構成の Java 実装版です。
+詳細・デプロイ手順は [backend/like-api/README.md](backend/like-api/README.md) を参照。
+
+- ビルド: `cd backend/like-api && mvn package`（単体テスト付き）
+- インフラ: `backend/like-api/terraform/like_api.tf`（Terraform リポジトリへコピーして apply）
+- フロント: `common/site.js` の `LIKE_API_URL` に Function URL を設定すると表示されます
 
 ## アニメーション（SVG + GSAP）
 
