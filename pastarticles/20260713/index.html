@@ -33,10 +33,26 @@
         <p>このページが、1記事＝1フォルダ＝1つの <code>index.html</code> の見本になります。
            新しい記事を書くときは、このフォルダ
            （<code>pastarticles/hello-world/</code>）ごとコピーして名前を変えるのが簡単です。</p>
-        <h2>画像を入れたいときは</h2>
-        <p>画像は <code>assets</code> 側の同じ名前のフォルダ
-           （<code>assets/pastarticles/hello-world/</code>）に置き、次のように読み込みます。</p>
-        <pre><code>&lt;img src="/assets/pastarticles/hello-world/photo.jpg" alt="説明"&gt;</code></pre>
+        <h2>おまけ(近況)</h2>
+        <p>最近spotifyのプレイリストを最近の曲にしようと思い曲探しをしているのですが、女性ボーカルの曲が多くなったと思いました。聴くのはJPOPやロック、パンクロックが多く、あなたのおすすめを辿って色々探索してみる感じです。<br>
+            最近おススメの曲を3曲紹介します。</p>
+
+          <div style="display:flex; gap:16px; flex-wrap:wrap;">
+            <div style="flex:1 1 0; min-width:0;">
+              <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/2Foy22FGZWsM7pr8zGatbw?utm_source=generator&si=6276fc60ea3447b4" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+              <p style="margin:8px 0 0; font-size:0.9em;">構成が綺麗でビビっときてカッコカワイイ曲。てかこのバンド特に今年は神曲しか出してません。メジャーデビューおめ。</p>
+            </div>
+            <div style="flex:1 1 0; min-width:0;">
+              <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/0y4pZUeux4VUpxj9Gxzhwj?utm_source=generator&si=c2aacc2094d048cf" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+              <p style="margin:8px 0 0; font-size:0.9em;">キングダムのED歌ってたけどもっと有名になれ。jpop+古きボカロ感を混ぜた感じ。</p>
+            </div>
+            <div style="flex:1 1 0; min-width:0;">
+              <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/2pdls2qWOcB33HveBJdS2f?utm_source=generator&si=5565005188cd43ad" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+              <p style="margin:8px 0 0; font-size:0.9em;">electric callboyは90年代のハードロック、メタルをゴリッゴリにぶつけてくる魂に響くバンド。そんなバンドとパンクのレジェンドthe Offspringとの最強のコラボ。今年日本でライブあるらしくて見に行きたかった；；</p>
+            </div>
+          </div>
+        
+          <pre><code>&lt;img src="/assets/pastarticles/hello-world/photo.jpg" alt="説明"&gt;</code></pre>
         <p>絶対パス（<code>/assets/...</code>）で書けば、どの階層の記事からでも同じ書き方で読み込めます。</p>
       </article>
     </main>
