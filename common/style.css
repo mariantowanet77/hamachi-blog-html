@@ -529,3 +529,41 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
   .hero h1 { font-size: 1.5rem; }
   .sidebar__block { padding: 14px; }
 }
+
+/* ハンバーガーアイコンの外側 */
+#header .hamburger {
+    /* ボタン全体サイズを50pxの正方形に設定 */
+    width: 50px;
+    height: 50px;
+    /* マウスポインターを指に変更 */
+    cursor: pointer;
+    position: fixed;
+    top: 5px;
+    right: 10px;
+    /* 優先度を変更 */
+    z-index: 30;
+  }
+
+/* ハンバーガーアイコンの内側の線 */
+#header .hamburger span {
+    /* ボタン横線の長さと高さを設定 */
+    width: 30px;
+    height: 3px;
+    background-color: #232323;
+    /* 絶対位置指定（親は.hamburger） */
+    position: absolute;
+    left: 10px;
+    /* ボタンが押されてXに切り替わるときの動作設定 */
+    transition: all 0.3s;
+  }
+
+/* ハンバーガーメニュー3本の線の縦の位置を設定 */
+#header .hamburger span:nth-of-type(1) {
+    top: 16px;
+  }
+#header .hamburger span:nth-of-type(2) {
+    top: 25px;
+  }
+#header .hamburger span:nth-of-type(3) {
+    top: 34px;
+  }
