@@ -110,27 +110,30 @@
 .nav-toggle span:nth-of-type(2) { top: 25px; }
 .nav-toggle span:nth-of-type(3) { top: 33px; }
 
-/* 上の線：4分割して左一番目の切れ目 */
-.nav-toggle span:nth-of-type(1)::before {
-  content: "▶";
-  position: absolute;
-  left: 25%;                   /* 4分割の左から1番目の切れ目 */
-  top: 50%;
-  transform: translate(-50%, calc(-50% + 1px));  /* 線の中央からほんの少し下へ */
-  font-size: 11px;
-  line-height: 1;
-  color: var(--text);
-}
-/* 下の線：4分割して右一番目の切れ目 */
+/* 三角（＝剣の鍔）。
+   文字の ▶ / ◀ は端末ごとに使われるフォントが変わり、字形の高さも
+   ベースラインも違うため位置がずれる。border で描けばフォントが
+   関係しない純粋な図形になり、どの端末でも寸法が一致する。 */
+.nav-toggle span:nth-of-type(1)::before,
 .nav-toggle span:nth-of-type(3)::before {
-  content: "◀";
+  content: "";
   position: absolute;
-  left: 75%;                   /* 4分割の右から1番目の切れ目 */
   top: 50%;
-  transform: translate(-50%, calc(-50% + 1px));  /* 線の中央からほんの少し下へ */
-  font-size: 11px;
-  line-height: 1;
-  color: var(--text);
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;     /* 三角の高さ＝5+5＝10px */
+  border-bottom: 5px solid transparent;
+  transform: translate(-50%, -50%);      /* 線の中央にぴったり重ねる */
+}
+/* 上の線：4分割して左一番目の切れ目に ▶（右向き） */
+.nav-toggle span:nth-of-type(1)::before {
+  left: 25%;                   /* 4分割の左から1番目の切れ目 */
+  border-left: 8px solid var(--text);
+}
+/* 下の線：4分割して右一番目の切れ目に ◀（左向き） */
+.nav-toggle span:nth-of-type(3)::before {
+  left: 75%;                   /* 4分割の右から1番目の切れ目 */
+  border-right: 8px solid var(--text);
 }
 
 /* クロス */
