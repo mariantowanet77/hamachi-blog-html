@@ -819,3 +819,32 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
   color: #e6e6e6;
   white-space: pre;            /* 折り返さず整形を保つ */
 }
+
+/* ---------- おまけ：Spotify おすすめ（横並び＋薄い区切り線） ---------- */
+.spotify-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.spotify-card {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 18px;             /* 線と中身のあいだの余白 */
+}
+.spotify-card:first-child { padding-left: 0; }
+.spotify-card:last-child  { padding-right: 0; }
+/* カードとカードのあいだに薄い区切り線 */
+.spotify-card + .spotify-card {
+  border-left: 1px solid var(--border);
+}
+
+/* スマホ幅：3枚だと潰れて読みにくいので縦積みにして、線も横向きに */
+@media (max-width: 560px) {
+  .spotify-row { flex-direction: column; }
+  .spotify-card { padding: 16px 0 0; }
+  .spotify-card:first-child { padding-top: 0; }
+  .spotify-card + .spotify-card {
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+}
