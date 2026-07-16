@@ -235,6 +235,30 @@ const ARTICLES = [
     document.body.appendChild(overlay);
     document.body.appendChild(burger);
 
+    /* ヘッダーの高さを --header-h として公開し、開閉ボタンをそこから
+       上下中央に置く。ヘッダーの高さは画面幅（padding・文字サイズ）で
+       変わるので、固定値の top では端末ごとに中心がずれる。
+       ※ .site-nav をヘッダーから抜いた「後」に測ること。抜く前は
+         ナビの分だけ高さが余計に出る。
+       ※ 小数のままだと線が滲むので整数に丸める。 */
+    const header = document.querySelector('.site-header');
+    if (header) {
+      const syncHeaderHeight = () => {
+        const h = Math.round(header.getBoundingClientRect().height);
+        document.documentElement.style.setProperty('--header-h', h + 'px');
+      };
+      syncHeaderHeight();
+      if (window.ResizeObserver) {
+        new ResizeObserver(syncHeaderHeight).observe(header);
+      } else {
+        window.addEventListener('resize', syncHeaderHeight);
+      }
+      // Webフォント読み込み後にタイトルの高さが変わることがある
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(syncHeaderHeight);
+      }
+    }
+
     function setOpen(open) {
       burger.classList.toggle('active', open);
       nav.classList.toggle('active', open);
