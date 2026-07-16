@@ -774,6 +774,46 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
 }
 .nav-overlay.active { opacity: 1; visibility: visible; }
 
+/* 展開メニューの一番下ゾーン（三分割の下1/3）に薄い波アニメーション */
+.site-nav--drawer::before,
+.site-nav--drawer::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 33%;                 /* ドロワーを三分割した一番下のゾーン */
+  pointer-events: none;        /* リンク操作の邪魔をしない */
+  z-index: 0;                  /* リンクより後ろ */
+  background-repeat: repeat-x;
+  background-position: 0 bottom;
+}
+/* 奥の波：ゆっくり・うすめ（右へ流れる） */
+.site-nav--drawer::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40' preserveAspectRatio='none'%3E%3Cpath d='M0 15 Q30 5 60 15 T120 15 V40 H0 Z' fill='%2384b5d5'/%3E%3C/svg%3E");
+  background-size: 180px 100%;
+  opacity: .30;
+  animation: nav-wave-back 9s linear infinite;
+}
+/* 手前の波：少し速く（左へ流れる） */
+.site-nav--drawer::after {
+  height: 26%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40' preserveAspectRatio='none'%3E%3Cpath d='M0 15 Q30 25 60 15 T120 15 V40 H0 Z' fill='%2384b5d5'/%3E%3C/svg%3E");
+  background-size: 140px 100%;
+  opacity: .45;
+  animation: nav-wave-front 6s linear infinite;
+}
+@keyframes nav-wave-back  { from { background-position-x: 0; } to { background-position-x: 180px; } }
+@keyframes nav-wave-front { from { background-position-x: 0; } to { background-position-x: -140px; } }
+/* リンクは波より前面に置く */
+.site-nav--drawer .btn { position: relative; z-index: 1; }
+
+/* 「動きを減らす」設定のときは波を止める */
+@media (prefers-reduced-motion: reduce) {
+  .site-nav--drawer::before,
+  .site-nav--drawer::after { animation: none; }
+}
+
 /* ---------- コードブロック（Qiita風） ---------- */
 .codeblock {
   margin: 1.4em 0;
