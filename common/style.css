@@ -567,3 +567,111 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
 #header .hamburger span:nth-of-type(3) {
     top: 34px;
   }
+  /* メニューの外側を設定 */
+#header .nav {
+    /* メニュー開いた時の幅を設定 */
+    width: 80%;
+    /* メニュー開いた時の高さを設定（画面いっぱいに広げる） */
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    right: -80%;
+    z-index: 20;
+    /* スライド表示する際の速度を設定 */
+    transition: all 0.6s;
+  }
+
+/* メニュー内の設定 */
+#header .nav ul {
+    width: 100%;
+    height: 100vh;
+    /* メニューを縦並びにオーバーライド */
+    flex-direction: column;
+    /* 上下の高さを設定 */
+    padding: 60px 0;
+    overflow: auto;
+    /* 要素同士の余白をオーバーライド */
+    gap: 16px;
+    text-align: center;
+  }
+
+  /* ボタンを押した際の動作を作成 */
+#header .nav.active {
+    right: 0;
+}
+
+/* ボタンをXにするCSS */
+#header .hamburger.active span:nth-of-type(1) {
+    top: 22px;
+    transform: rotate(-45deg);
+}
+#header .hamburger.active span:nth-of-type(2) {
+    opacity: 0;
+}
+#header .hamburger.active span:nth-of-type(3) {
+    top: 22px;
+    transform: rotate(45deg);
+}
+
+/* ---------- 記事内デモ：ハンバーガーメニューを中央に出す枠 ---------- */
+/* .hb-demo の枠を「画面」に見立て、本文の真ん中に置く。
+   中のメニューはこの枠を基準に動くので、記事の中で完結して開閉できる。 */
+.hb-demo {
+    position: relative;          /* 中のメニューをこの枠を基準に配置する */
+    width: 100%;
+    max-width: 360px;
+    height: 220px;
+    margin: 24px auto;           /* ← 左右 auto で本文の中央にくる */
+    border: 2px dashed #b9c6d6;
+    border-radius: 12px;
+    background: #f7fafc;
+    overflow: hidden;            /* 枠からはみ出したメニューを隠す */
+}
+
+.hb-demo .hamburger {
+    width: 50px;
+    height: 50px;
+    position: absolute;          /* 枠(.hb-demo)の右上に配置 */
+    top: 8px;
+    right: 10px;
+    cursor: pointer;
+    z-index: 3;
+}
+.hb-demo .hamburger span {
+    width: 30px;
+    height: 3px;
+    background-color: #232323;
+    position: absolute;
+    left: 10px;
+    transition: all 0.3s;
+}
+.hb-demo .hamburger span:nth-of-type(1) { top: 16px; }
+.hb-demo .hamburger span:nth-of-type(2) { top: 25px; }
+.hb-demo .hamburger span:nth-of-type(3) { top: 34px; }
+
+.hb-demo .nav {
+    position: absolute;
+    top: 0;
+    right: -100%;                /* ふだんは枠の外（右）に隠しておく */
+    width: 70%;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.08);
+    transition: right 0.5s;      /* スライドの速さ */
+    z-index: 2;
+}
+.hb-demo .nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 56px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+}
+.hb-demo .nav.active { right: 0; }   /* 開いたら枠の中へスライドイン */
+
+/* ボタンを×印に変える */
+.hb-demo .hamburger.active span:nth-of-type(1) { top: 22px; transform: rotate(-45deg); }
+.hb-demo .hamburger.active span:nth-of-type(2) { opacity: 0; }
+.hb-demo .hamburger.active span:nth-of-type(3) { top: 22px; transform: rotate(45deg); }

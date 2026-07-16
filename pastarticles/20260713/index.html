@@ -34,12 +34,24 @@
         　というわけで、さっそく作っていきます。いいものが作れると信じて頑張りましょう！
         </p>
         <h2>そもそもハンバーガーメニューとは</h2>
-        <p>まずハンバーガーメニューとはなんぞ？という方もいるでしょう。簡単に説明したいと思いますが、多分見たほうが早いです。</p>
-      <div class="hamburger">
-        <span></span>
-        <span></span>
-        <span></span>
+        <p>まずハンバーガーメニューとはなんぞ？という方もいるでしょう。大体のサイトの左上か右上にある、みんな見たことあるやつです。</p>
+      <!-- ▼ 記事内デモ：ハンバーガーメニューのサンプル（この枠＝画面に見立てて中央に表示） -->
+      <div class="hb-demo">
+        <div class="hamburger" onclick="this.classList.toggle('active'); this.nextElementSibling.classList.toggle('active');">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <nav class="nav">
+          <ul>
+            <li><a href="#">test1</a></li>
+            <li><a href="#">test2</a></li>
+            <li><a href="#">test3</a></li>
+            <li><a href="#">test4</a></li>
+          </ul>
+        </nav>
       </div>
+      <!-- ▲ 記事内デモここまで -->
         
           
         <p>このページが、1記事＝1フォルダ＝1つの <code>index.html</code> の見本になります。
