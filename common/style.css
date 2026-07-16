@@ -619,12 +619,12 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
 .hb-demo {
     position: relative;          /* 中のメニューをこの枠を基準に配置する */
     width: 100%;
-    max-width: 360px;
+    max-width: 400px;
     height: 220px;
-    margin: 24px auto;           /* ← 左右 auto で本文の中央にくる */
-    border: 2px dashed #b9c6d6;
+    margin: 25px auto;          /* ← 左右 auto で本文の中央にくる */
+    border: 3px dashed #871010;
     border-radius: 12px;
-    background: #f7fafc;
+    background: #ffffff;
     overflow: hidden;            /* 枠からはみ出したメニューを隠す */
 }
 
@@ -655,7 +655,7 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
     right: -100%;                /* ふだんは枠の外（右）に隠しておく */
     width: 70%;
     height: 100%;
-    background: #ffffff;
+    background: #c10000;
     box-shadow: -4px 0 12px rgba(0, 0, 0, 0.08);
     transition: right 0.5s;      /* スライドの速さ */
     z-index: 2;
@@ -675,3 +675,147 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
 .hb-demo .hamburger.active span:nth-of-type(1) { top: 22px; transform: rotate(-45deg); }
 .hb-demo .hamburger.active span:nth-of-type(2) { opacity: 0; }
 .hb-demo .hamburger.active span:nth-of-type(3) { top: 22px; transform: rotate(45deg); }
+
+/* ---------- ヘッダーのハンバーガー（二刀流アイコン） ---------- */
+/* デモ(.hb-demo .hamburger)をベースに、右上固定＋剣風の装飾を加えたもの。
+   ・上の線 … 左から1/4の位置に ▶（右向きのまま）
+   ・下の線 … 右から1/4の位置に ◀（左向きのまま）
+   ・✖のとき … 上下の線が回転して交差し、二刀流の剣がクロスして見える */
+.nav-toggle {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 50;                 /* ドロワー(40)・暗幕(35)より前面 */
+}
+
+/* 三本線（＝剣の刃） */
+.nav-toggle span {
+  position: absolute;
+  left: 11px;                  /* 30px幅を52pxの中央に */
+  width: 30px;
+  height: 3px;
+  background-color: var(--text);
+  border-radius: 2px;
+  transition: top .35s, transform .35s, opacity .2s;
+}
+.nav-toggle span:nth-of-type(1) { top: 17px; }
+.nav-toggle span:nth-of-type(2) { top: 25px; }
+.nav-toggle span:nth-of-type(3) { top: 33px; }
+
+/* 上の線：左から1/4の切れ目に ▶（向きはそのまま） */
+.nav-toggle span:nth-of-type(1)::before {
+  content: "▶";
+  position: absolute;
+  left: 25%;                   /* 4分割の左から1番目の切れ目 */
+  top: 50%;
+  transform: translate(-50%, calc(-50% + 1px));  /* 線の中央からほんの少し下へ */
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text);
+}
+/* 下の線：右から1/4（左から3/4）の切れ目に ◀（向きはそのまま） */
+.nav-toggle span:nth-of-type(3)::before {
+  content: "◀";
+  position: absolute;
+  left: 75%;                   /* 4分割の右から1番目の切れ目 */
+  top: 50%;
+  transform: translate(-50%, calc(-50% + 1px));  /* 線の中央からほんの少し下へ */
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text);
+}
+
+/* ✖（開いた状態）＝二刀流の剣がクロス */
+.nav-toggle.active span:nth-of-type(1) { top: 25px; transform: rotate(-45deg); }
+.nav-toggle.active span:nth-of-type(2) { opacity: 0; }
+.nav-toggle.active span:nth-of-type(3) { top: 25px; transform: rotate(45deg); }
+
+/* ---------- スライド式メニュー（右から出るドロワー） ---------- */
+.site-nav--drawer {
+  position: fixed;
+  top: 0;
+  right: -80%;                 /* ふだんは画面の外（右）に隠す */
+  width: min(80%, 300px);
+  height: 100vh;
+  flex-direction: column;      /* .site-nav の flex を縦並びに上書き */
+  justify-content: center;
+  gap: 14px;
+  padding: 80px 26px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: -6px 0 24px rgba(44, 42, 38, .14);
+  transition: right .45s ease; /* スライドの速さ */
+  z-index: 40;
+  overflow-y: auto;
+}
+.site-nav--drawer.active { right: 0; }   /* 開いたら画面内へ */
+.site-nav--drawer .btn {
+  display: block;
+  text-align: center;
+  font-size: 1rem;
+  padding: 12px 16px;
+}
+
+/* 背景の暗幕 */
+.nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 18, 15, .38);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .4s ease, visibility .4s;
+  z-index: 35;
+}
+.nav-overlay.active { opacity: 1; visibility: visible; }
+
+/* ---------- コードブロック（Qiita風） ---------- */
+.codeblock {
+  margin: 1.4em 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;            /* 角丸からはみ出さないように */
+  background: #1e2430;         /* 暗い背景 */
+}
+.codeblock__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: #2b3342;
+  color: #d7dee8;
+  font-size: .8rem;
+}
+.codeblock__name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .02em;
+}
+.codeblock__copy {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.codeblock__copy:hover { background: rgba(255, 255, 255, .12); }
+.codeblock pre {
+  margin: 0;
+  padding: 14px 16px;
+  max-width: 100%;
+  overflow-x: auto;            /* 長い行は横スクロール */
+}
+.codeblock code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .82rem;
+  line-height: 1.6;
+  color: #e6e6e6;
+  white-space: pre;            /* 折り返さず整形を保つ */
+}
