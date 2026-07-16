@@ -203,6 +203,97 @@ const ARTICLES = [
     });
   }
 
+  /* =====================================================================
+     ▼ ヘッダーのハンバーガーメニュー（右から出るドロワー）
+     各ページのヘッダーにある .site-nav をそのまま流用します。
+     ・右上に開閉ボタン(.nav-toggle)を作る
+     ・.site-nav を body 直下へ移してドロワー(.site-nav--drawer)にする
+       （ヘッダーの重なり順に巻き込まれないよう body 直下に置く）
+     アイコンの見た目（二刀流風）は style.css 側で装飾しています。
+     ===================================================================== */
+  (function initNav() {
+    const inner = document.querySelector('.site-header__inner');
+    const nav = inner && inner.querySelector('.site-nav');
+    if (!nav) return;
+
+    // 開閉ボタン（三本線）
+    const burger = document.createElement('button');
+    burger.type = 'button';
+    burger.className = 'nav-toggle';
+    burger.setAttribute('aria-label', 'メニューを開く');
+    burger.setAttribute('aria-expanded', 'false');
+    burger.innerHTML = '<span></span><span></span><span></span>';
+
+    // 背景の暗幕（クリックで閉じる）
+    const overlay = document.createElement('div');
+    overlay.className = 'nav-overlay';
+
+    // ドロワー化して body 直下へ移動（重なり順を安定させる）
+    nav.classList.add('site-nav--drawer');
+    document.body.appendChild(nav);
+    document.body.appendChild(overlay);
+    document.body.appendChild(burger);
+
+    function setOpen(open) {
+      burger.classList.toggle('active', open);
+      nav.classList.toggle('active', open);
+      overlay.classList.toggle('active', open);
+      burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      burger.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
+    }
+
+    burger.addEventListener('click', function () {
+      setOpen(!burger.classList.contains('active'));
+    });
+    overlay.addEventListener('click', function () { setOpen(false); });
+    // メニュー内のリンクを押したら閉じる
+    nav.addEventListener('click', function (e) {
+      if (e.target.closest('a')) setOpen(false);
+    });
+    // Esc キーで閉じる
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') setOpen(false);
+    });
+  })();
+
+  /* =====================================================================
+     ▼ コードブロック（data-src のファイルを読み込んで表示）
+     <code class="code-src" data-src="xxx"> の中身を、その場で fetch して
+     テキストとして流し込みます（実ファイルと常に一致・手打ち不要）。
+     ※ file:// で直接開くと fetch がブロックされるので、ローカルサーバー
+       （python -m http.server など）経由で開いてください。
+     .codeblock__copy ボタンでコードをコピーできます。
+     ===================================================================== */
+  document.querySelectorAll('.code-src[data-src]').forEach(function (el) {
+    fetch(el.dataset.src)
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+      })
+      .then(function (text) {
+        // textContent で入れると <> などがそのまま「文字」として安全に表示される
+        el.textContent = text.replace(/\s+$/, '');   // 末尾の余分な空行を削る
+      })
+      .catch(function (e) {
+        el.textContent = '（読み込みに失敗しました: ' + el.dataset.src + '）';
+        console.warn('コードの読み込みに失敗:', e);
+      });
+  });
+
+  // コードブロックのコピーボタン
+  document.querySelectorAll('.codeblock__copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const block = btn.closest('.codeblock');
+      const code = block && block.querySelector('.code-src');
+      if (!code || !navigator.clipboard) return;
+      navigator.clipboard.writeText(code.textContent).then(function () {
+        const prev = btn.textContent;
+        btn.textContent = '✅';
+        setTimeout(function () { btn.textContent = prev; }, 1200);
+      }).catch(function () {});
+    });
+  });
+
   // --- タイトルのタイプライター演出 ---
   // data-typewriter を付けた要素の文字を、1文字ずつカタカタと表示します。
   // data-typewriter の値 = 「1文字あたりの表示間隔(ミリ秒)」。省略時は 110。

@@ -1,0 +1,177 @@
+/* ハンバーガーアイコンの外側 */
+#header .hamburger {
+    /* ボタン全体サイズを50pxの正方形に設定 */
+    width: 50px;
+    height: 50px;
+    /* マウスポインターを指に変更 */
+    cursor: pointer;
+    position: fixed;
+    top: 5px;
+    right: 10px;
+    /* 優先度を変更 */
+    z-index: 30;
+  }
+
+/* ハンバーガーアイコンの内側の線 */
+#header .hamburger span {
+    /* ボタン横線の長さと高さを設定 */
+    width: 30px;
+    height: 3px;
+    background-color: #232323;
+    /* 絶対位置指定（親は.hamburger） */
+    position: absolute;
+    left: 10px;
+    /* ボタンが押されてXに切り替わるときの動作設定 */
+    transition: all 0.3s;
+  }
+
+/* ハンバーガーメニュー3本の線の縦の位置を設定 */
+#header .hamburger span:nth-of-type(1) {
+    top: 16px;
+  }
+#header .hamburger span:nth-of-type(2) {
+    top: 25px;
+  }
+#header .hamburger span:nth-of-type(3) {
+    top: 34px;
+  }
+  /* メニューの外側を設定 */
+#header .nav {
+    /* メニュー開いた時の幅を設定 */
+    width: 80%;
+    /* メニュー開いた時の高さを設定（画面いっぱいに広げる） */
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    right: -80%;
+    z-index: 20;
+    /* スライド表示する際の速度を設定 */
+    transition: all 0.6s;
+  }
+
+/* メニュー内の設定 */
+#header .nav ul {
+    width: 100%;
+    height: 100vh;
+    /* メニューを縦並びにオーバーライド */
+    flex-direction: column;
+    /* 上下の高さを設定 */
+    padding: 60px 0;
+    overflow: auto;
+    /* 要素同士の余白をオーバーライド */
+    gap: 16px;
+    text-align: center;
+  }
+
+  /* ボタンを押した際の動作を作成 */
+#header .nav.active {
+    right: 0;
+}
+
+/* ボタンをXにするCSS */
+#header .hamburger.active span:nth-of-type(1) {
+    top: 22px;
+    transform: rotate(-45deg);
+}
+#header .hamburger.active span:nth-of-type(2) {
+    opacity: 0;
+}
+#header .hamburger.active span:nth-of-type(3) {
+    top: 22px;
+    transform: rotate(45deg);
+}
+
+/* ---------- ヘッダーのハンバーガー（二刀流アイコン） ---------- */
+/* デモに三角をつけて二刀流っぽく */
+.nav-toggle {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 50;                 /* ドロワー(40)・暗幕(35)より前面 */
+}
+
+/* 三本線（＝剣の刃） */
+.nav-toggle span {
+  position: absolute;
+  left: 11px;                  /* 30px幅を52pxの中央に */
+  width: 30px;
+  height: 3px;
+  background-color: var(--text);
+  border-radius: 2px;
+  transition: top .35s, transform .35s, opacity .2s;
+}
+.nav-toggle span:nth-of-type(1) { top: 17px; }
+.nav-toggle span:nth-of-type(2) { top: 25px; }
+.nav-toggle span:nth-of-type(3) { top: 33px; }
+
+/* 上の線：4分割して左一番目の切れ目 */
+.nav-toggle span:nth-of-type(1)::before {
+  content: "▶";
+  position: absolute;
+  left: 25%;                   /* 4分割の左から1番目の切れ目 */
+  top: 50%;
+  transform: translate(-50%, calc(-50% + 1px));  /* 線の中央からほんの少し下へ */
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text);
+}
+/* 下の線：4分割して右一番目の切れ目 */
+.nav-toggle span:nth-of-type(3)::before {
+  content: "◀";
+  position: absolute;
+  left: 75%;                   /* 4分割の右から1番目の切れ目 */
+  top: 50%;
+  transform: translate(-50%, calc(-50% + 1px));  /* 線の中央からほんの少し下へ */
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text);
+}
+
+/* クロス */
+.nav-toggle.active span:nth-of-type(1) { top: 25px; transform: rotate(-45deg); }
+.nav-toggle.active span:nth-of-type(2) { opacity: 0; }
+.nav-toggle.active span:nth-of-type(3) { top: 25px; transform: rotate(45deg); }
+
+/* ---------- スライド式メニュー（右から出るドロワー） ---------- */
+.site-nav--drawer {
+  position: fixed;
+  top: 0;
+  right: -80%;                 /* ふだんは画面の外（右）に隠す */
+  width: min(80%, 300px);
+  height: 100vh;
+  flex-direction: column;      /* .site-nav の flex を縦並びに上書き */
+  justify-content: center;
+  gap: 14px;
+  padding: 80px 26px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: -6px 0 24px rgba(44, 42, 38, .14);
+  transition: right .45s ease; /* スライドの速さ */
+  z-index: 40;
+  overflow-y: auto;
+}
+.site-nav--drawer.active { right: 0; }   /* 開いたら画面内へ */
+.site-nav--drawer .btn {
+  display: block;
+  text-align: center;
+  font-size: 1rem;
+  padding: 12px 16px;
+}
+
+/* 背景の暗幕 */
+.nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 18, 15, .38);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .4s ease, visibility .4s;
+  z-index: 35;
+}
+.nav-overlay.active { opacity: 1; visibility: visible; }

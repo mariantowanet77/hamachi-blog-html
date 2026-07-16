@@ -6,15 +6,27 @@
   <title>はじめての記事 — Hello World｜はまち日和</title>
   <link rel="icon" type="image/svg+xml" href="/assets/common/favicon.svg">
   <link rel="stylesheet" href="/common/style.css">
+  <style>
+    /* Qiita風コードブロック（ファイル名バー＋コピーボタン＋ダークなコード欄） */
+    .codeblock { margin: 1.2em 0; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; background: #0d1117; }
+    .codeblock__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; background: #161b22; border-bottom: 1px solid #30363d; }
+    .codeblock__name { color: #c9d1d9; font: 600 12px/1 "Segoe UI", system-ui, sans-serif; }
+    .codeblock__copy { appearance: none; border: 1px solid #30363d; background: #21262d; color: #c9d1d9; padding: 4px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .codeblock__copy:hover { background: #30363d; }
+    .codeblock__copy.is-done { color: #7ee787; border-color: #2ea043; }
+    .codeblock pre { margin: 0; padding: 14px 16px; max-height: 460px; overflow: auto; }
+    .codeblock code { display: block; font-family: Consolas, "SFMono-Regular", ui-monospace, Menlo, monospace; font-size: 13px; line-height: 1.65; color: #e6edf3; white-space: pre; tab-size: 2; }
+ 
+  </style>
 </head>
 <body data-base="/">
   <header class="site-header">
     <div class="site-header__inner">
       <a class="site-title" href="/">はまち日和</a>
       <nav class="site-nav">
-        <a class="btn" href="/">ホーム</a>
-        <a class="btn" href="/pastarticles/">過去の記事</a>
-        <a class="btn" href="/about/">このブログについて</a>
+        <a class="btn" href="/">HOME</a>
+        <a class="btn" href="/pastarticles/">ARCHIVE</a>
+        <a class="btn" href="/about/">ABOUT</a>
       </nav>
     </div>
   </header>
@@ -27,17 +39,69 @@
           <time datetime="2026-06-18">2026-06-18</time>
         </div>
         <h1>ハンバーガーメニューを作ってみよう</h1>
-        <p>どうも、はまちです。第三回ということで、ハンバーガーメニューを作ろう！企画というわけです。作る理由としては、前回の最後でもお話したのですが、全体のレイアウトは元々AIにテンプレートを作らせたものを使っており、オリジナリティを出したいと思ったからです。
-            
+        <p>どうも、はまちです。第三回ということで、ハンバーガーメニューを作ろう！という回になっています。まずはこちらをご覧ください。</p>
+        <img src="/assets/img/20260713/gamenforblog.png" alt="今のレイアウト" style="width:100%;max-width:900px;">
+        <h3>...AI感がすごい</h3>
+        <p>レイアウト作るの面倒くさくて条件言って作ってもらったのはいいけどめっちゃAI感すごい！<br>
+        　というわけで、少しずつ人間の手がある程度感じられるように、少しずつ変えていきましょう
         </p>
-        <p>このページが、1記事＝1フォルダ＝1つの <code>index.html</code> の見本になります。
-           新しい記事を書くときは、このフォルダ
-           （<code>pastarticles/hello-world/</code>）ごとコピーして名前を変えるのが簡単です。</p>
-        <h2>画像を入れたいときは</h2>
-        <p>画像は <code>assets</code> 側の同じ名前のフォルダ
-           （<code>assets/pastarticles/hello-world/</code>）に置き、次のように読み込みます。</p>
-        <pre><code>&lt;img src="/assets/pastarticles/hello-world/photo.jpg" alt="説明"&gt;</code></pre>
-        <p>絶対パス（<code>/assets/...</code>）で書けば、どの階層の記事からでも同じ書き方で読み込めます。</p>
+        <h2>そもそもハンバーガーメニューとは</h2>
+        <p>まずハンバーガーメニューとはなんぞ？という方もいるでしょう。大体のサイトの左上か右上にある、みんな見たことあるやつです。</p>
+      <!-- ▼ 記事内デモ：ハンバーガーメニューのサンプル（この枠＝画面に見立てて中央に表示） -->
+      <div class="hb-demo">
+        <div class="hamburger" onclick="this.classList.toggle('active'); this.nextElementSibling.classList.toggle('active');">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <nav class="nav">
+          <ul>
+            <li><a href="#">test1</a></li>
+            <li><a href="#">test2</a></li>
+            <li><a href="#">test3</a></li>
+            <li><a href="#">test4</a></li>
+          </ul>
+        </nav>
+      </div>
+      <!-- ▲ 記事内デモここまで -->
+        <p style="text-align:center; font-size:15px">↑menu開いたらカタールの国旗みてえだな！<br>
+        ※<a href="https://qiita.com/pompompurin2526/items/3a655bd2b863c844a0c8">こちら</a>の記事を参考にしました。</p>
+        <h3>デモが動いたので機能完成です！やったー！！...じゃなくて</h3>   
+        <p>デモ用で作ったのをそのまま右上にはめてもいいのですが、一工夫しておしゃれにしたいと思います。</p>
+        <h2>ハンバーガーメニューのCSSコード</h2>
+       <!-- Qiita風コードブロック：hamburger.html の中身を fetch で読み込んで表示（実物と常に一致・手打ち不要） -->
+        <div class="codeblock" data-anim="fade-up">
+          <div class="codeblock__head">
+            <span class="codeblock__name">hamburger.html</span>
+            <button class="codeblock__copy" type="button">🗒️</button>
+          </div>
+          <pre><code class="code-src" data-src="hamburger.html">読み込み中…</code></pre>
+        </div>
+        <!-- Qiita風コードブロック おわり-->
+
+        <h3>結果はページの右上についてるやつです。</h3>
+        <p>クリックして✖になったら二刀流で剣が重なり合ってるように見えると思います。<br>
+        ほんとははまちの名前に沿ったもので🐟で作れたらいいなとは思ったのですが、今は思いつかん！またいつか！</p>
+
+        
+        <h2>おまけ(近況)</h2>
+        <p>最近spotifyのプレイリストを最近の曲にしようと思い曲探しをしているのですが、女性ボーカルの曲が多くなったと思いました。聴くのはJPOPやロック、パンクロックが多く、あなたのおすすめを辿って色々探索してみる感じです。<br>
+            最近おススメの曲を3曲紹介します。</p>
+
+          <div style="display:flex; gap:16px; flex-wrap:wrap;">
+            <div style="flex:1 1 0; min-width:0;">
+              <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/2Foy22FGZWsM7pr8zGatbw?utm_source=generator&si=6276fc60ea3447b4" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+              <p style="margin:8px 0 0; font-size:0.9em;">構成が綺麗でビビっときてカッコカワイイ曲。てかこのバンド特に今年は神曲しか出してません。メジャーデビューおめ。</p>
+            </div>
+            <div style="flex:1 1 0; min-width:0;">
+              <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/0y4pZUeux4VUpxj9Gxzhwj?utm_source=generator&si=c2aacc2094d048cf" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+              <p style="margin:8px 0 0; font-size:0.9em;">キングダムのED歌ってたけどもっと有名になれ。jpop+古きボカロ感を混ぜた感じ。</p>
+            </div>
+            <div style="flex:1 1 0; min-width:0;">
+              <iframe data-testid="embed-iframe" style="border-radius:12px" src="https://open.spotify.com/embed/track/2pdls2qWOcB33HveBJdS2f?utm_source=generator&si=5565005188cd43ad" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+              <p style="margin:8px 0 0; font-size:0.9em;">electric callboyは90年代のハードロック、メタルをゴリッゴリにぶつけてくる魂に響くバンド。そんなバンドとパンクのレジェンドthe Offspringとの最強のコラボ。今年日本でライブあるらしくて見に行きたかった；；</p>
+            </div>
+          </div>
       </article>
     </main>
     <aside class="sidebar">
