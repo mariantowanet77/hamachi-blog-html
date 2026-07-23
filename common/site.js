@@ -16,7 +16,7 @@ const ARTICLES = [
     title:   '久しぶりにゲーム作るか編⓵(製作途中)',
     date:    '2026-07-22',
     tag:     '技術',
-    path:    'pastarticles/20260722/',
+    path:    'pastarticles/20260721/',
     excerpt: 'ブログ投稿第四号。マルチプレイヤーで作ったことはないからやってみよう編です。※まだ書いてる途中',
   },
     {
