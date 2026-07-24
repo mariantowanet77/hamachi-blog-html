@@ -224,6 +224,17 @@ const ARTICLES = [
     const nav = inner && inner.querySelector('.site-nav');
     if (!nav) return;
 
+    // 実験用スペース Labo へのリンク。各ページの HTML を触らずに済むよう、
+    // ここで全ページのメニューへまとめて差し込む。
+    if (!nav.querySelector('[data-labo]')) {
+      const laboLink = document.createElement('a');
+      laboLink.className = 'btn btn--labo';
+      laboLink.href = base + 'labo/';
+      laboLink.dataset.labo = '';
+      laboLink.textContent = '🧪 Labo';
+      nav.appendChild(laboLink);
+    }
+
     // 開閉ボタン（三本線）
     const burger = document.createElement('button');
     burger.type = 'button';
@@ -409,8 +420,9 @@ const ARTICLES = [
     })();
   }
 
-  // secret/ 配下（隠しページ）では情景を出さない
-  if (!location.pathname.includes('/secret/')) {
+  // secret/（隠しページ）と labo/（WebGLの実験場）では情景を出さない
+  if (!location.pathname.includes('/secret/') &&
+      !location.pathname.includes('/labo/')) {
     initScene();
   }
 })();
