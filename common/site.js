@@ -231,7 +231,7 @@ const ARTICLES = [
       laboLink.className = 'btn btn--labo';
       laboLink.href = base + 'labo/';
       laboLink.dataset.labo = '';
-      laboLink.textContent = '🧪 Labo';
+      laboLink.textContent = 'ラボはこちら';
       nav.appendChild(laboLink);
     }
 

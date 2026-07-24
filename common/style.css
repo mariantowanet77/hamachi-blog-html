@@ -223,7 +223,7 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
 
 /* ---------- フッター（累計アクセス数） ---------- */
 .site-footer {
-  position: relative;          /* フッター内で位置指定する要素の基準 */
+  position: relative;          /* ひ♡み♡つボタンを右下に置くための基準 */
   flex-shrink: 0;
   /* 背景の砂浜（.scene__beach）と同じ砂色にして、最下部でも境目を感じさせない */
   background: linear-gradient(180deg, #d4bd90 0%, #c2a771 55%, #b2955f 100%);
@@ -233,22 +233,24 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
 }
 
 /* ---------- 【ひ♡み♡つ】ボタン ----------
-   もとは砂色になじむ極小の「こっそりボタン」でしたが、ポートフォリオで
-   見てほしい導線なのでフッター中央の目立つピル型に変更。
-   ゆっくり脈動させて視線を集めます。 */
+   置き場所はフッター右下のまま（もとの「こっそりボタン」と同じ定位置）。
+   ただし砂色に埋もれて気づかれないので、小ぶりなピル型にして
+   ゆっくり脈動させ、スルーされないようにしています。 */
 .secret-link {
+  position: absolute;          /* フッター右下のいつもの定位置 */
+  right: 12px;
+  bottom: 10px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  padding: 9px 22px;
-  font-size: 1.15rem;          /* 以前は .68rem */
+  gap: 4px;
+  padding: 5px 14px;
+  font-size: .85rem;           /* 以前は .68rem（小さすぎた） */
   font-weight: 800;
-  letter-spacing: .06em;
+  letter-spacing: .04em;
   color: #fff;
   background: linear-gradient(135deg, #ff87ab 0%, #d94f7c 55%, #b83e6a 100%);
   border-radius: 999px;
-  box-shadow: 0 4px 14px rgba(184, 62, 106, .45);
+  box-shadow: 0 3px 10px rgba(184, 62, 106, .40);
   text-decoration: none;
   opacity: 1;                  /* 以前は .4（ほぼ見えなかった） */
   animation: secret-pulse 2.2s ease-in-out infinite;
@@ -263,8 +265,17 @@ a:hover { color: var(--accent-dk); text-decoration: underline; }
   animation-play-state: paused;   /* ホバー中は脈動を止めてピタッと止める */
 }
 @keyframes secret-pulse {
-  0%, 100% { transform: scale(1);    box-shadow: 0 4px 14px rgba(184, 62, 106, .45); }
-  50%      { transform: scale(1.05); box-shadow: 0 7px 22px rgba(184, 62, 106, .70); }
+  0%, 100% { transform: scale(1);    box-shadow: 0 3px 10px rgba(184, 62, 106, .40); }
+  50%      { transform: scale(1.04); box-shadow: 0 5px 16px rgba(184, 62, 106, .65); }
+}
+/* 画面が狭いときは copyright と重ならないよう、流れの中で右寄せにする */
+@media (max-width: 560px) {
+  .secret-link {
+    position: static;
+    display: flex;
+    width: fit-content;
+    margin: 10px 0 0 auto;
+  }
 }
 /* 「動きを減らす」設定のときは脈動させない */
 @media (prefers-reduced-motion: reduce) {
