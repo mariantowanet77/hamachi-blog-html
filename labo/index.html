@@ -4,11 +4,102 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
-  <title>Labo（準備中）｜はまち日和</title>
+  <title>Labo｜はまち日和</title>
   <link rel="icon" type="image/svg+xml" href="/assets/common/favicon.svg">
   <link rel="stylesheet" href="/common/style.css">
+  <style>
+    /* =====================================================================
+       Labo 専用スタイル（このページだけの見た目。自由に書き換えてOK）
+       ・背景は <canvas id="gl"> に WebGL シェーダーで描いています
+       ・共通の style.css を、暗い没入デザイン用に上書きしています
+       ===================================================================== */
+    .labo { background: #05060a; color: #eaf0ff; }
+
+    /* WebGL 背景：画面いっぱいに固定して、いちばん後ろに敷く */
+    #gl {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: -1;                 /* ヘッダー(10)・本文(0)より後ろ */
+    }
+
+    /* ヘッダーを透過ガラス風にして背景を透かす */
+    .labo .site-header {
+      background: rgba(6, 9, 16, .35);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom-color: rgba(255, 255, 255, .10);
+    }
+    .labo .site-title { color: #fff; }
+    .labo .site-title:hover { color: #9fd0ff; }
+
+    /* ハンバーガー（三本線）を暗い背景でも見えるよう白に */
+    .labo .nav-toggle span { background-color: #fff; }
+    .labo .nav-toggle span:nth-of-type(1)::before { border-left-color: #fff; }
+    .labo .nav-toggle span:nth-of-type(3)::before { border-right-color: #fff; }
+
+    /* ヒーロー（中央の見出し） */
+    .labo-hero {
+      min-height: calc(100vh - var(--header-h, 76px));
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 8vh 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 18px;
+    }
+    .labo-hero h1 {
+      margin: 0;
+      font-size: clamp(3rem, 12vw, 8rem);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: .02em;
+      background: linear-gradient(120deg, #ffffff, #9fd0ff 55%, #c9a7ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 8px 40px rgba(80, 120, 255, .25);
+    }
+    .labo-hero p {
+      margin: 0;
+      max-width: 44ch;
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: rgba(234, 240, 255, .92);
+      text-shadow: 0 2px 14px rgba(0, 0, 0, .55);
+    }
+    .labo-hero .labo-note { font-size: .85rem; color: rgba(234, 240, 255, .6); }
+
+    .labo-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 10px 20px;
+      border: 1px solid rgba(255, 255, 255, .3);
+      border-radius: 999px;
+      color: #eaf0ff;
+      text-decoration: none;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: background .2s, border-color .2s, transform .2s;
+    }
+    .labo-back:hover {
+      background: rgba(255, 255, 255, .12);
+      border-color: #fff;
+      color: #fff;
+      text-decoration: none;
+      transform: translateY(-2px);
+    }
+  </style>
 </head>
-<body data-base="/">
+<body class="labo" data-base="/">
+  <!-- 背景の WebGL シェーダー（描画は最下部の <script> 内） -->
+  <canvas id="gl"></canvas>
+
   <header class="site-header">
     <div class="site-header__inner">
       <a class="site-title" href="/">はまち日和</a>
@@ -20,22 +111,166 @@
     </div>
   </header>
 
-  <div class="layout layout--secret">
-    <main class="content" style="text-align:center;">
-      <section class="hero">
-        <h1>🧪 Labo（準備中）</h1>
-        <p>WebGL やアニメーションを気ままに試す実験用スペースです。<br>
-        中身はこれから作ります。作業計画は同じフォルダの <code>TODO.md</code> に置いてあります。</p>
-        <p style="margin-top:16px;">
-          <a class="btn btn--primary" href="/">← はまち日和 へ戻る</a>
-        </p>
-      </section>
-    </main>
-  </div>
+  <main class="labo-hero">
+    <h1>Labo</h1>
+    <p>実験用の遊び場。WebGL やアニメーション、思いついた処理をテキトーに置いていく場所です。</p>
+    <p class="labo-note">背景はリアルタイム WebGL シェーダー（依存ライブラリ無し）。マウスを動かすと少し反応します。</p>
+    <a class="labo-back" href="/">← はまち日和 へ戻る</a>
+  </main>
 
-  <footer class="site-footer">
-    <p class="copyright">© 2026 はまち日和</p>
-  </footer>
   <script src="/common/site.js"></script>
+
+  <!-- =====================================================================
+       背景の WebGL シェーダー（依存なし・ここを差し替えれば見た目が変わる）
+       ・画面いっぱいの四角形に、フラグメントシェーダーで模様を描いています
+       ・fbm ノイズをドメインワープして、色パレット(iq式)に流し込む王道の演出
+       ・実験を増やすときは fragSrc の中身をいじるのが手っ取り早いです
+       ===================================================================== -->
+  <script>
+    (function () {
+      const canvas = document.getElementById('gl');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+      // WebGL が使えない環境では、CSS グラデーションで代替表示して終了
+      if (!gl) {
+        document.body.style.background =
+          'radial-gradient(120% 120% at 20% 10%, #1a2a6c 0%, #2a1a4a 45%, #05060a 100%)';
+        return;
+      }
+
+      const vertSrc = `
+        attribute vec2 a_pos;
+        void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
+      `;
+
+      const fragSrc = `
+        precision highp float;
+        uniform vec2  u_res;     // 画面の解像度(px)
+        uniform float u_time;    // 経過秒
+        uniform vec2  u_mouse;   // マウス位置(0..1)
+
+        // --- ハッシュ & 値ノイズ ---
+        float hash(vec2 p) {
+          p = fract(p * vec2(123.34, 456.21));
+          p += dot(p, p + 45.32);
+          return fract(p.x * p.y);
+        }
+        float noise(vec2 p) {
+          vec2 i = floor(p), f = fract(p);
+          float a = hash(i);
+          float b = hash(i + vec2(1.0, 0.0));
+          float c = hash(i + vec2(0.0, 1.0));
+          float d = hash(i + vec2(1.0, 1.0));
+          vec2 u = f * f * (3.0 - 2.0 * f);         // なめらかに補間
+          return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+        }
+        // --- フラクタルノイズ(fbm)：ノイズを縮小しながら重ねる ---
+        float fbm(vec2 p) {
+          float v = 0.0, amp = 0.5;
+          mat2 m = mat2(1.6, 1.2, -1.2, 1.6);       // 回転させて重ねムラを防ぐ
+          for (int i = 0; i < 6; i++) {
+            v += amp * noise(p);
+            p = m * p;
+            amp *= 0.5;
+          }
+          return v;
+        }
+        // --- iq の余弦カラーパレット ---
+        vec3 palette(float t) {
+          vec3 a = vec3(0.5), b = vec3(0.5);
+          vec3 c = vec3(1.0);
+          vec3 d = vec3(0.00, 0.33, 0.67);
+          return a + b * cos(6.28318 * (c * t + d));
+        }
+
+        void main() {
+          // 画面中央を原点に、縦を基準に正規化（横長でも歪まない）
+          vec2 uv = (gl_FragCoord.xy - 0.5 * u_res) / u_res.y;
+          float t  = u_time * 0.08;
+          vec2  mo = (u_mouse - 0.5) * 1.5;
+
+          // ドメインワープ：ノイズの入力座標をノイズでゆがめ、有機的な流れを作る
+          vec2 q = vec2(fbm(uv + t), fbm(uv + vec2(5.2, 1.3) - t));
+          vec2 r = vec2(
+            fbm(uv + 1.5 * q + vec2(1.7, 9.2) + 0.15 * mo + 0.10 * t),
+            fbm(uv + 1.5 * q + vec2(8.3, 2.8) - 0.10 * t)
+          );
+          float f = fbm(uv + 2.0 * r);
+
+          vec3 col = palette(f + t * 0.5 + length(q) * 0.3);
+          col = mix(col, vec3(0.02, 0.03, 0.10), 0.25);  // 暗い色を混ぜて深みを出す
+          col *= 0.75 + 0.55 * f;                         // コントラスト
+          col *= smoothstep(1.35, 0.15, length(uv));      // ビネット（周辺を暗く）
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `;
+
+      function compile(type, src) {
+        const sh = gl.createShader(type);
+        gl.shaderSource(sh, src);
+        gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+          console.error('シェーダーのコンパイルに失敗:', gl.getShaderInfoLog(sh));
+        }
+        return sh;
+      }
+
+      const prog = gl.createProgram();
+      gl.attachShader(prog, compile(gl.VERTEX_SHADER, vertSrc));
+      gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fragSrc));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        console.error('プログラムのリンクに失敗:', gl.getProgramInfoLog(prog));
+        return;
+      }
+      gl.useProgram(prog);
+
+      // 画面いっぱいの四角形（三角ストリップ2枚）
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER,
+        new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      const loc = gl.getAttribLocation(prog, 'a_pos');
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+      const uRes   = gl.getUniformLocation(prog, 'u_res');
+      const uTime  = gl.getUniformLocation(prog, 'u_time');
+      const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+      const mouse = { x: 0.5, y: 0.5 };
+      window.addEventListener('pointermove', function (e) {
+        mouse.x = e.clientX / window.innerWidth;
+        mouse.y = 1.0 - e.clientY / window.innerHeight;
+      }, { passive: true });
+
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2); // 高精細端末は2倍で頭打ち
+        const w = Math.floor(window.innerWidth  * dpr);
+        const h = Math.floor(window.innerHeight * dpr);
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width  = w;
+          canvas.height = h;
+          gl.viewport(0, 0, w, h);
+        }
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      // 「動きを減らす」設定のときは静止画を1枚描いて止める
+      const reduce = window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function draw(ms) {
+        resize();
+        gl.uniform2f(uRes, canvas.width, canvas.height);
+        gl.uniform1f(uTime, ms * 0.001);
+        gl.uniform2f(uMouse, mouse.x, mouse.y);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        if (!reduce) requestAnimationFrame(draw);
+      }
+      if (reduce) draw(0); else requestAnimationFrame(draw);
+    })();
+  </script>
 </body>
 </html>

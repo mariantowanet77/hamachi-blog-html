@@ -1,6 +1,6 @@
 # Labo — これからやることメモ
 
-_更新: 2026-07-23（家PCで続きをやるための引き継ぎメモ）_
+_更新: 2026-07-24_
 
 ## これは何
 `labo/` は記事とは別の **実験用フォルダ**。WebGL アニメや思いついた処理を
@@ -23,15 +23,22 @@ _更新: 2026-07-23（家PCで続きをやるための引き継ぎメモ）_
   「大きく・脈動する目立つピル」に変更する。
   - 理由: ポートフォリオで見せたときにスルーされないように。
 
-## 次にやる（TODO）
-- [ ] `labo/index.html` に WebGL シェーダー本体を実装（準備中プレースホルダを置き換え）
-- [ ] `common/site.js`
-  - [ ] `initNav()` で「🧪 Labo」リンクをメニューに注入（href は `base + 'labo/'`）
-  - [ ] `initScene()` の除外条件に `'/labo/'` を追加（labo では夜空シーンを出さない）
-- [ ] `common/style.css` の `.secret-link` を強調
-  - font-size を大きく / opacity を上げる / 脈動アニメ / `prefers-reduced-motion` で停止
-- [ ] ローカルサーバーで確認: プロジェクト直下で `python -m http.server 8000`
-  → http://localhost:8000/labo/
+## 実装済み（2026-07-24）
+- [x] `labo/index.html` に WebGL シェーダー本体を実装
+      （fbm ノイズ → ドメインワープ → iq の余弦パレット。依存ライブラリ無し）
+- [x] `common/site.js`
+  - [x] `initNav()` で「🧪 Labo」リンクをメニューに注入（href は `base + 'labo/'`）
+  - [x] `initScene()` の除外条件に `'/labo/'` を追加（labo では夜空シーンを出さない）
+- [x] `common/style.css` の `.secret-link` を強調
+      （フッター中央の大きいピル型＋脈動。`prefers-reduced-motion` で停止）
+- [x] ローカルサーバーで表示確認
+
+## これから（アイデア）
+- [ ] シェーダーを差し替えて実験を増やす
+      （`labo/index.html` の `fragSrc` をいじるのが手っ取り早い）
+- [ ] 実験が増えたら `labo/` 配下にサブページを切って一覧ページを作る
+
+確認用: プロジェクト直下で `python -m http.server 8000` → http://localhost:8000/labo/
 
 ## 参考メモ
 - 別件で「オンライン対戦ファミコンウォーズ風ゲーム（非商用・ポートフォリオ）」を構想中。
