@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>打ち上げ花火｜Labo｜はまち日和</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/common/favicon.svg">
+  <link rel="stylesheet" href="/common/style.css">
+  <style>
+    /* =====================================================================
+       打ち上げ花火アニメ（Canvas 2D + 仮想カメラ）
+       ・筒(下)からスタート → 打ち上げと同時にカメラが引く → 上昇 → 開花
+       ・見た目の数値は script 冒頭の CONFIG に集約。ここをいじれば調整可
+       ===================================================================== */
+    .fw { background: #04050a; color: #eaf0ff; overflow: hidden; }
+
+    /* 花火を描くキャンバス：画面いっぱいに固定して最背面に敷く */
+    #fw-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: -1;
+      touch-action: manipulation;
+    }
+
+    /* ヘッダーを透過ガラス風に */
+    .fw .site-header {
+      background: rgba(6, 9, 16, .30);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom-color: rgba(255, 255, 255, .08);
+    }
+    .fw .site-title { color: #fff; }
+    .fw .site-title:hover { color: #9fd0ff; }
+    .fw .nav-toggle span { background-color: #fff; }
+    .fw .nav-toggle span:nth-of-type(1)::before { border-left-color: #fff; }
+    .fw .nav-toggle span:nth-of-type(3)::before { border-right-color: #fff; }
+
+    /* 下部の操作ヒント */
+    .fw-hint {
+      position: fixed;
+      left: 50%;
+      bottom: 26px;
+      transform: translateX(-50%);
+      z-index: 5;
+      padding: 9px 18px;
+      border-radius: 999px;
+      background: rgba(8, 12, 22, .45);
+      border: 1px solid rgba(255, 255, 255, .14);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      color: rgba(234, 240, 255, .9);
+      font-size: .9rem;
+      letter-spacing: .03em;
+      white-space: nowrap;
+      pointer-events: none;
+      transition: opacity .5s;
+    }
+
+    /* 左上の戻るリンク */
+    .fw-back {
+      position: fixed;
+      left: 16px;
+      bottom: 22px;
+      z-index: 5;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: 1px solid rgba(255, 255, 255, .25);
+      border-radius: 999px;
+      color: #eaf0ff;
+      text-decoration: none;
+      background: rgba(8, 12, 22, .35);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      font-size: .85rem;
+      transition: background .2s, border-color .2s, transform .2s;
+    }
+    .fw-back:hover {
+      background: rgba(255, 255, 255, .12);
+      border-color: #fff;
+      color: #fff;
+      text-decoration: none;
+      transform: translateY(-2px);
+    }
+    @media (max-width: 520px) {
+      .fw-hint { font-size: .8rem; bottom: 72px; }
+    }
+  </style>
+</head>
+<body class="fw" data-base="/">
+  <canvas id="fw-canvas"></canvas>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-title" href="/">はまち日和</a>
+      <nav class="site-nav">
+        <a class="btn" href="/">ホーム</a>
+        <a class="btn" href="/pastarticles/">過去の記事</a>
+        <a class="btn" href="/about/">このブログについて</a>
+      </nav>
+    </div>
+  </header>
+
+  <p class="fw-hint" id="fw-hint">クリック / タップで打ち上げ 🎆</p>
+  <a class="fw-back" href="/labo/">← Labo に戻る</a>
+
+  <script src="/common/site.js"></script>
+
+  <!-- =====================================================================
+       花火アニメーション本体（依存なし）
+       ・座標は「ワールド座標（Y上向き・地面=0）」で扱い、仮想カメラで画面へ変換
+       ・カメラは打ち上げの進み具合に合わせて「寄り(筒)」→「引き(全景)」へ移動
+       ===================================================================== -->
+  <script>
+    (function () {
+      const canvas = document.getElementById('fw-canvas');
+      const ctx = canvas.getContext('2d');
+      const hintEl = document.getElementById('fw-hint');
+
+      /* ------- ここをいじれば調整できる（CONFIG） ------- */
+      const CONFIG = {
+        // 筒の画像に差し替えたいとき：ここにパスを入れる（空なら図形で描画）
+        // 例: '/assets/img/20260728/tube.png'
+        TUBE_IMG_SRC: '',
+
+        MUZZLE_Y: 46,        // 筒口の高さ（ワールド。ここから玉が出る）
+        APEX_Y: 560,         // 開花する高さ（ワールド）
+        GRAVITY: 300,        // 重力（大きいほど早く落ちる）
+
+        BURST_COUNT: 150,    // 開花の粒の数
+        GLITTER_COUNT: 34,   // きらめく追加の粒
+        BURST_SPEED: [90, 265],  // 粒の初速レンジ
+        PART_LIFE: [1.1, 1.9],   // 粒の寿命(秒)
+        DRAG: 0.97,          // 空気抵抗（1に近いほど大きく広がる）
+
+        AIM_HOLD: 0.7,       // 打ち上げ前に筒を見せる時間(秒)
+        END_PAUSE: 0.7,      // 開花後の余韻(秒)
+        AUTOPLAY: true,      // 自動でループするか
+      };
+
+      // 「動きを減らす」設定なら自動再生しない（クリックで1発だけ）
+      const reduce = window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduce) CONFIG.AUTOPLAY = false;
+
+      /* ------- 画面サイズ / 高解像度対応 ------- */
+      let W = 0, H = 0;
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        W = Math.floor(window.innerWidth  * dpr);
+        H = Math.floor(window.innerHeight * dpr);
+        canvas.width = W;
+        canvas.height = H;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      /* ------- 星（背景・スクリーン座標。割合で持ってリサイズ耐性） ------- */
+      const stars = [];
+      for (let i = 0; i < 140; i++) {
+        stars.push({
+          fx: Math.random(),
+          fy: Math.random() * 0.72,          // 上7割だけに散らす
+          r: Math.random() < 0.15 ? 1.7 : 1.0,
+          tw: Math.random() * Math.PI * 2,    // またたきの位相
+          sp: 1.5 + Math.random() * 2.5,
+        });
+      }
+
+      /* ------- 筒の画像（任意） ------- */
+      let tubeImg = null;
+      if (CONFIG.TUBE_IMG_SRC) {
+        tubeImg = new Image();
+        tubeImg.src = CONFIG.TUBE_IMG_SRC;
+      }
+
+      /* ------- 仮想カメラ ------- */
+      // cam.x, cam.y = 画面中央に映るワールド座標 / cam.zoom = ワールド→pxの倍率
+      const cam = { x: 0, y: 95, zoom: 1 };
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const easeInOut = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+      // 寄り（筒アップ）と引き（全景）のカメラ設定。高さの見える範囲で倍率を決める
+      function aimCam()  { return { x: 0, y: 95,  zoom: H / 190 }; }
+      function wideCam() { return { x: 0, y: 360, zoom: H / 800 }; }
+      function mixCam(a, b, t) {
+        return { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t), zoom: lerp(a.zoom, b.zoom, t) };
+      }
+
+      // ワールド座標へ描くための変換をセット（Y上向き）
+      function applyWorld() {
+        ctx.setTransform(cam.zoom, 0, 0, -cam.zoom,
+                         W / 2 - cam.x * cam.zoom, H / 2 + cam.y * cam.zoom);
+      }
+      function applyScreen() { ctx.setTransform(1, 0, 0, 1, 0, 0); }
+
+      /* ------- 状態 ------- */
+      const S = { phase: 'aim', t: 0, shell: null, parts: [], flashes: [] };
+
+      function rand(a, b) { return a + Math.random() * (b - a); }
+
+      function launch() {
+        // 筒口から、狙った高さ(APEX_Y)に届く初速で打ち出す
+        const h = CONFIG.APEX_Y - CONFIG.MUZZLE_Y;
+        const v0 = Math.sqrt(2 * CONFIG.GRAVITY * h);
+        S.shell = {
+          x: 0, y: CONFIG.MUZZLE_Y,
+          vx: rand(-18, 18), vy: v0,
+          hist: [],
+          hue: rand(0, 360),               // この花火の基本色
+          twoTone: Math.random() < 0.35,   // 2色ミックスにするか
+        };
+        S.phase = 'rising';
+        S.t = 0;
+        if (hintEl) hintEl.style.opacity = '0';
+      }
+
+      function burst(x, y, shell) {
+        // 開花：放射状に粒をばらまく
+        const total = CONFIG.BURST_COUNT;
+        for (let i = 0; i < total; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          const sp = lerp(CONFIG.BURST_SPEED[0], CONFIG.BURST_SPEED[1], Math.sqrt(Math.random()));
+          let hue = shell.hue + rand(-22, 22);
+          if (shell.twoTone && Math.random() < 0.5) hue = shell.hue + 160 + rand(-18, 18);
+          S.parts.push({
+            x, y,
+            vx: Math.cos(ang) * sp,
+            vy: Math.sin(ang) * sp,
+            life: rand(CONFIG.PART_LIFE[0], CONFIG.PART_LIFE[1]),
+            max: 0, hue, sat: 100, lig: 62,
+            size: rand(1.8, 2.9), hist: [], glit: false,
+          });
+        }
+        // きらめく粒（長寿命でチカチカ）
+        for (let i = 0; i < CONFIG.GLITTER_COUNT; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          const sp = rand(40, 180);
+          S.parts.push({
+            x, y,
+            vx: Math.cos(ang) * sp,
+            vy: Math.sin(ang) * sp,
+            life: rand(1.8, 2.6),
+            max: 0, hue: shell.hue + rand(-30, 30), sat: 60, lig: 85,
+            size: rand(1.2, 2.0), hist: [], glit: true,
+          });
+        }
+        S.parts.forEach(p => { if (!p.max) p.max = p.life; });
+        S.flashes.push({ x, y, t: 0, dur: 0.28, r: 22 });
+        S.shell = null;         // 玉は開花で消える（尾が残らないように）
+        S.phase = 'burst';
+        S.t = 0;
+      }
+
+      /* ------- 更新 ------- */
+      function update(dt) {
+        S.t += dt;
+
+        if (S.phase === 'aim') {
+          if (CONFIG.AUTOPLAY && S.t >= CONFIG.AIM_HOLD) launch();
+        }
+        else if (S.phase === 'rising') {
+          const s = S.shell;
+          s.hist.push({ x: s.x, y: s.y });
+          if (s.hist.length > 14) s.hist.shift();
+          s.vy -= CONFIG.GRAVITY * dt;
+          s.x += s.vx * dt;
+          s.y += s.vy * dt;
+          // 上昇中は火花をこぼす
+          if (Math.random() < 0.9) {
+            S.parts.push({
+              x: s.x + rand(-2, 2), y: s.y - 3,
+              vx: rand(-24, 24), vy: rand(-30, 10),
+              life: rand(0.3, 0.6), max: 0.6,
+              hue: 42, sat: 90, lig: 70, size: rand(1.0, 1.8), hist: [], glit: false,
+            });
+          }
+          if (s.vy <= 0) burst(s.x, s.y, s);   // 頂点で開花
+        }
+        else if (S.phase === 'burst') {
+          if (S.parts.length === 0) { S.phase = 'end'; S.t = 0; }
+        }
+        else if (S.phase === 'end') {
+          if (S.t >= CONFIG.END_PAUSE) {
+            S.shell = null;
+            S.phase = 'aim';
+            S.t = 0;
+            if (!CONFIG.AUTOPLAY && hintEl) hintEl.style.opacity = '1';
+          }
+        }
+
+        // 粒の物理更新
+        for (let i = S.parts.length - 1; i >= 0; i--) {
+          const p = S.parts[i];
+          p.hist.push({ x: p.x, y: p.y });
+          if (p.hist.length > (p.glit ? 3 : 6)) p.hist.shift();
+          p.vy -= CONFIG.GRAVITY * dt;
+          const d = Math.pow(CONFIG.DRAG, dt * 60);
+          p.vx *= d; p.vy *= d;
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.life -= dt;
+          if (p.life <= 0) S.parts.splice(i, 1);
+        }
+        // フラッシュ
+        for (let i = S.flashes.length - 1; i >= 0; i--) {
+          S.flashes[i].t += dt;
+          if (S.flashes[i].t >= S.flashes[i].dur) S.flashes.splice(i, 1);
+        }
+
+        // カメラ目標を決めて滑らかに追従
+        let target;
+        if (S.phase === 'rising') {
+          const prog = easeInOut(clamp(
+            (S.shell.y - CONFIG.MUZZLE_Y) / (CONFIG.APEX_Y - CONFIG.MUZZLE_Y), 0, 1));
+          target = mixCam(aimCam(), wideCam(), prog);
+          target.x = S.shell.x * 0.35;           // 玉を少しだけ追う
+        } else if (S.phase === 'burst') {
+          target = wideCam();
+        } else {
+          target = aimCam();
+        }
+        const k = 1 - Math.exp(-4 * dt);
+        cam.x += (target.x - cam.x) * k;
+        cam.y += (target.y - cam.y) * k;
+        cam.zoom += (target.zoom - cam.zoom) * k;
+      }
+
+      /* ------- 描画 ------- */
+      function drawBackground(now) {
+        applyScreen();
+        const sky = ctx.createLinearGradient(0, 0, 0, H);
+        sky.addColorStop(0,    '#04050a');
+        sky.addColorStop(0.55, '#080f22');
+        sky.addColorStop(1,    '#0d1730');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, W, H);
+
+        // 星（またたき）
+        for (const st of stars) {
+          const a = 0.35 + 0.5 * (0.5 + 0.5 * Math.sin(now * 0.001 * st.sp + st.tw));
+          ctx.globalAlpha = a;
+          ctx.fillStyle = '#dfe8ff';
+          ctx.beginPath();
+          ctx.arc(st.fx * W, st.fy * H, st.r * (W / 1400 + 0.6), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      function drawGround() {
+        applyWorld();
+        // 地面（暗いシルエット）
+        ctx.fillStyle = '#070a12';
+        ctx.fillRect(-6000, -600, 12000, 600);         // y:-600..0
+        // 地平の淡いにじみ
+        const g = ctx.createLinearGradient(0, 0, 0, 60);
+        g.addColorStop(0, 'rgba(90,120,190,0.18)');
+        g.addColorStop(1, 'rgba(90,120,190,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(-6000, 0, 12000, 60);
+      }
+
+      function drawTube() {
+        applyWorld();
+        if (tubeImg && tubeImg.complete && tubeImg.naturalWidth) {
+          // 画像がある場合：筒口(MUZZLE_Y)に上端を合わせて描画
+          const w = 60, h = CONFIG.MUZZLE_Y;
+          // ワールドはY上向きなので、いったんY反転して画像を正しく描く
+          ctx.save();
+          ctx.translate(-w / 2, CONFIG.MUZZLE_Y);
+          ctx.scale(1, -1);
+          ctx.drawImage(tubeImg, 0, 0, w, h);
+          ctx.restore();
+          return;
+        }
+        // 図形で描く筒（打ち上げ用の迫撃筒っぽく）
+        const topY = CONFIG.MUZZLE_Y, halfTop = 12, halfBot = 16;
+        const grad = ctx.createLinearGradient(-halfBot, 0, halfBot, 0);
+        grad.addColorStop(0,   '#2a2f3a');
+        grad.addColorStop(0.5, '#5a6473');
+        grad.addColorStop(1,   '#20242e');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(-halfBot, 0);
+        ctx.lineTo(-halfTop, topY);
+        ctx.lineTo(halfTop, topY);
+        ctx.lineTo(halfBot, 0);
+        ctx.closePath();
+        ctx.fill();
+        // 筒口のふち
+        ctx.fillStyle = '#151922';
+        ctx.beginPath();
+        ctx.ellipse(0, topY, halfTop, 3.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#7c8798';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        // 台座
+        ctx.fillStyle = '#171b24';
+        ctx.fillRect(-halfBot - 5, -6, (halfBot + 5) * 2, 8);
+        // 待機中はチリチリ導火線（aim中だけ）
+        if (S.phase === 'aim') {
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          const fa = 0.5 + 0.5 * Math.sin(performance.now() * 0.02);
+          ctx.fillStyle = 'rgba(255,180,80,' + (0.6 * fa) + ')';
+          ctx.beginPath();
+          ctx.arc(0, topY + 2, 2.2 + fa, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      function drawGlow() {
+        applyWorld();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineCap = 'round';
+
+        // 上昇中の玉の尾
+        if (S.shell) {
+          const s = S.shell;
+          for (let i = 1; i < s.hist.length; i++) {
+            const a = i / s.hist.length;
+            ctx.strokeStyle = 'hsla(42,100%,72%,' + (a * 0.9) + ')';
+            ctx.lineWidth = 2.4 * a;
+            ctx.beginPath();
+            ctx.moveTo(s.hist[i - 1].x, s.hist[i - 1].y);
+            ctx.lineTo(s.hist[i].x, s.hist[i].y);
+            ctx.stroke();
+          }
+          // 玉の頭
+          ctx.fillStyle = 'rgba(255,240,200,0.95)';
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, 3.4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // 粒
+        for (const p of S.parts) {
+          const lifeR = clamp(p.life / p.max, 0, 1);
+          let a = lifeR;
+          if (p.glit) a *= (0.3 + 0.7 * Math.random());  // きらめきはチカチカ
+          // 尾
+          for (let i = 1; i < p.hist.length; i++) {
+            const t = i / p.hist.length;
+            ctx.strokeStyle = 'hsla(' + p.hue + ',' + p.sat + '%,' + p.lig + '%,' + (a * t * 0.8) + ')';
+            ctx.lineWidth = p.size * t;
+            ctx.beginPath();
+            ctx.moveTo(p.hist[i - 1].x, p.hist[i - 1].y);
+            ctx.lineTo(p.hist[i].x, p.hist[i].y);
+            ctx.stroke();
+          }
+          // 頭
+          ctx.fillStyle = 'hsla(' + p.hue + ',' + p.sat + '%,' + Math.min(92, p.lig + 15) + '%,' + a + ')';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 0.9, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // 開花の閃光
+        for (const f of S.flashes) {
+          const t = f.t / f.dur;
+          const r = f.r * (0.4 + t * 2.2);
+          const a = (1 - t) * 0.6;
+          const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, r);
+          g.addColorStop(0, 'rgba(255,255,245,' + a + ')');
+          g.addColorStop(1, 'rgba(255,255,245,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
+      /* ------- ループ ------- */
+      let last = performance.now();
+      function frame(now) {
+        let dt = (now - last) / 1000;
+        last = now;
+        dt = Math.min(dt, 0.05);          // タブ復帰時の暴走を防ぐ
+
+        update(dt);
+
+        drawBackground(now);
+        drawGround();
+        drawTube();
+        drawGlow();
+
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+
+      /* ------- 操作：クリック/タップで打ち上げ ------- */
+      function tryLaunch() {
+        if (S.phase === 'aim') launch();
+      }
+      window.addEventListener('pointerdown', function (e) {
+        // ヘッダーやリンクを押したときは無視
+        if (e.target.closest('a, button, .site-header')) return;
+        tryLaunch();
+      });
+    })();
+  </script>
+</body>
+</html>
