@@ -46,14 +46,14 @@
       bottom: 26px;
       transform: translateX(-50%);
       z-index: 5;
-      padding: 9px 18px;
+      padding: 9px 12px;
       border-radius: 999px;
       background: rgba(8, 12, 22, .45);
       border: 1px solid rgba(255, 255, 255, .14);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       color: rgba(234, 240, 255, .9);
-      font-size: .9rem;
+      font-size: .8rem;
       letter-spacing: .03em;
       white-space: nowrap;
       pointer-events: none;
@@ -106,7 +106,7 @@
     </div>
   </header>
 
-  <p class="fw-hint" id="fw-hint">クリック / タップで打ち上げ 🎆</p>
+  <p class="fw-hint" id="fw-hint">画面をタップしてみよう！</p>
   <a class="fw-back" href="/labo/">← Labo に戻る</a>
 
   <script src="/common/site.js"></script>
@@ -181,7 +181,7 @@
 
       /* ------- 仮想カメラ ------- */
       // cam.x, cam.y = 画面中央に映るワールド座標 / cam.zoom = ワールド→pxの倍率
-      const cam = { x: 0, y: 95, zoom: 1 };
+      const cam = { x: 10, y: 95, zoom: 1 };
       const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
       const lerp = (a, b, t) => a + (b - a) * t;
       const easeInOut = t => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -214,7 +214,7 @@
           vx: rand(-18, 18), vy: v0,
           hist: [],
           hue: rand(0, 360),               // この花火の基本色
-          twoTone: Math.random() < 0.35,   // 2色ミックスにするか
+          twoTone: Math.random() < 0.70,   // 2色ミックスにするか
         };
         S.phase = 'rising';
         S.t = 0;
