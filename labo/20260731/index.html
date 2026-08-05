@@ -18,9 +18,9 @@
   </script>
   <style>
     /* =====================================================================
-       Cavalry で作ったムービーを「割り込み」で流すページ
+       Cavalry で作ったアニメを Lottie で「割り込み」再生するページ
        ・ページを開くと一拍おいて、映像が全画面に“ブツッ”と割り込んでくる
-       ・再生が終わると白フラッシュ → ブラウン管オフ風にたたんで本文へ
+       ・Lottie はループ素材なので「◯周だけ回して閉じる」方式にしている
        ・タイミング類は script 冒頭の CONFIG に集約
        ===================================================================== */
     .cv { background: #05060a; color: #eaf0ff; overflow-x: hidden; }
@@ -69,19 +69,14 @@
       100% { transform: scaleY(0.006) scaleX(0);    filter: brightness(3.4); opacity: 0; }
     }
 
-    #intro-video {
+    /* Lottie の描画先。lottie-web が中に <svg> を作る */
+    #intro-lottie {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;                  /* 全画面を埋める（横長画面） */
-      display: block;
-      background: #000;
     }
-    /* 縦長の画面では切れすぎるので、構図を優先して全体を映す */
-    @media (max-aspect-ratio: 1 / 1) {
-      #intro-video { object-fit: contain; }
-    }
+    #intro-lottie svg { display: block; }
 
     /* 走査線＋ビネット。“信号が割り込んできた”感の味付け（うっすらでOK） */
     .intro__grain {
@@ -116,11 +111,13 @@
       100% { opacity: 0; }
     }
 
-    /* スキップ／自動再生がブロックされたときの再生ボタン */
-    .intro__skip,
-    .intro__play {
+    /* スキップ */
+    .intro__skip {
       position: absolute;
       z-index: 2;
+      right: 20px;
+      bottom: 20px;
+      padding: 9px 16px;
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -131,29 +128,14 @@
       -webkit-backdrop-filter: blur(6px);
       color: #eaf0ff;
       font: inherit;
-      cursor: pointer;
-      transition: background .2s, border-color .2s, opacity .3s;
-    }
-    .intro__skip:hover,
-    .intro__play:hover { background: rgba(255, 255, 255, .14); border-color: #fff; }
-
-    .intro__skip {
-      right: 20px;
-      bottom: 20px;
-      padding: 9px 16px;
       font-size: .82rem;
       letter-spacing: .04em;
+      cursor: pointer;
       opacity: 0;                          /* 割り込み直後は隠しておく */
+      transition: background .2s, border-color .2s, opacity .3s;
     }
+    .intro__skip:hover { background: rgba(255, 255, 255, .14); border-color: #fff; }
     .intro__skip.is-shown { opacity: .75; }
-
-    .intro__play {
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      padding: 16px 30px;
-      font-size: 1rem;
-    }
 
     /* ---------- 本文 ---------- */
     .cv .site-header {
@@ -264,17 +246,12 @@
 <body class="cv" data-base="/">
 
   <!-- =====================================================================
-       割り込み映像（Cavalry で作ったコンポジション）
-       ・音声トラックは無し。muted / playsinline は自動再生を通すための保険
+       割り込みアニメ（Cavalry → Lottie 書き出し）
+       ・動画ではないので自動再生ポリシーに引っかからない＝必ず流れる
        ===================================================================== -->
   <div id="intro" hidden>
     <div class="intro__screen">
-      <video id="intro-video"
-             src="/assets/img/labo/Composition%201.mp4"
-             muted
-             playsinline
-             preload="auto"
-             disablepictureinpicture></video>
+      <div id="intro-lottie"></div>
       <div class="intro__grain"></div>
     </div>
     <button type="button" class="intro__skip" id="intro-skip">SKIP →</button>
@@ -296,11 +273,11 @@
     <h1>Cavalryを触る</h1>
     <p>
       After Effects みたいなモーショングラフィックスのツール「Cavalry」を触ってみた回。
-      作ったコンポジションを書き出して、ページを開いた瞬間に全画面で割り込ませています。
+      作ったコンポジションを Lottie で書き出して、ページを開いた瞬間に全画面で割り込ませています。
     </p>
     <p class="cv-note">
-      映像はページを開くと自動で流れます（音声なし・約4秒）。
-      クリック／Esc でスキップ、下のボタンでもう一度見られます。
+      mp4 ではなく Lottie（ベクター）なので、どの解像度でもシャープで、
+      自動再生がブロックされることもありません。クリック／Esc でスキップできます。
     </p>
     <div class="cv-actions">
       <button type="button" class="cv-btn" id="cv-replay">▶ もう一度割り込ませる</button>
@@ -308,17 +285,18 @@
     </div>
   </main>
 
+  <script src="/common/vendor/lottie_light.min.js"></script>
   <script src="/common/site.js"></script>
 
   <!-- =====================================================================
        割り込みの進行管理
-       ・読み込み待ち → 一拍おく → フラッシュ＆カットイン → 再生 → カットアウト
-       ・映像が読めない／再生できない場合は黙って本文だけ見せる（固まらせない）
+       ・JSON 読み込み → 一拍おく → フラッシュ＆カットイン → ◯周再生 → カットアウト
+       ・読み込めない場合は黙って本文だけ見せる（固まらせない）
        ===================================================================== -->
   <script>
     (function () {
       const intro   = document.getElementById('intro');
-      const video   = document.getElementById('intro-video');
+      const box     = document.getElementById('intro-lottie');
       const flash   = document.getElementById('intro-flash');
       const skipBtn = document.getElementById('intro-skip');
       const main    = document.getElementById('cv-main');
@@ -326,25 +304,42 @@
 
       /* ------- ここをいじれば調整できる（CONFIG） ------- */
       const CONFIG = {
+        SRC: '/assets/img/labo/Composition%201.json',
+
+        // この素材は「約43フレームで1周するループ」。全249フレームは同じ動きの
+        // 約5回分なので、最後まで流さずに ◯周だけ回して閉じる。
+        CYCLE_FRAMES: 43,   // 1周のフレーム数
+        CYCLES: 1,          // 何周まわしてから閉じるか（2 にすると約3.4秒）
+
+        // Cavalry 側の背景レイヤー名。ここに名前を入れるとその層を捨てて
+        // 「背景が透明なアニメ」として重ねられる（下のページが透ける）。
+        // null にすると Cavalry で作ったままの見た目（背景あり）で出る。
+        STRIP_LAYER: null,  // 例: 'Background Shape'
+
         BEAT_BEFORE: 260,   // 割り込む前に本文を見せておく時間(ms)。“不意打ち”感の素
-        LOAD_TIMEOUT: 1800, // 映像の読み込みを待つ上限(ms)。超えたら待たずに進む
-        CUT_IN: 220,        // カットインの尺(ms) ※CSS の cv-cut-in と揃える
+        LOAD_TIMEOUT: 2500, // JSON の読み込みを待つ上限(ms)
         CUT_OUT: 420,       // カットアウトの尺(ms) ※CSS の cv-cut-out と揃える
         SKIP_AFTER: 700,    // SKIP ボタンを出すまでの時間(ms)
-        SAFETY_MARGIN: 2000,// 再生完了イベントが来ないときの保険(ms)
+        SAFETY_MARGIN: 1500,// 完了イベントが来ないときの保険(ms)
       };
 
       const reduce = window.matchMedia &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+      let anim = null;
       let endTimer = null;
       let finished = false;
 
-      /* ------- 本文を出して終了 ------- */
-      function reveal() {
-        main.classList.add('is-revealed');
+      function reveal() { main.classList.add('is-revealed'); }
+
+      // 白フラッシュを1回焚く（連続で焚けるようアニメを付け直す）
+      function fire(el) {
+        el.classList.remove('is-firing');
+        void el.offsetWidth;      // リフローを挟んでアニメをリセット
+        el.classList.add('is-firing');
       }
 
+      /* ------- 本文を出して終了 ------- */
       function finish(withFlash) {
         if (finished) return;
         finished = true;
@@ -361,96 +356,99 @@
         // アニメーションが終わったら完全に取り除く（裏のクリックを邪魔しない）
         setTimeout(function () {
           intro.hidden = true;
-          try { video.pause(); } catch (e) {}
+          if (anim) anim.pause();
         }, CONFIG.CUT_OUT);
       }
 
-      // 白フラッシュを1回焚く（連続で焚けるようアニメを付け直す）
-      function fire(el) {
-        el.classList.remove('is-firing');
-        void el.offsetWidth;      // リフローを挟んでアニメをリセット
-        el.classList.add('is-firing');
+      /* ------- 画面比率に合わせて cover / contain を切り替える ------- */
+      function fitSvg() {
+        const svg = anim && anim.renderer && anim.renderer.svgElement;
+        if (!svg) return;
+        // 横長は画面を埋める(slice=cover)、縦長は構図優先(meet=contain)
+        const portrait = window.innerWidth / window.innerHeight < 1;
+        svg.setAttribute('preserveAspectRatio', portrait ? 'xMidYMid meet' : 'xMidYMid slice');
       }
+      window.addEventListener('resize', fitSvg);
 
-      /* ------- 自動再生がブロックされたとき用の再生ボタン ------- */
-      function showPlayButton() {
-        if (intro.querySelector('.intro__play')) return;
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'intro__play';
-        btn.textContent = '▶ 再生';
-        btn.addEventListener('click', function (e) {
-          e.stopPropagation();
-          btn.remove();
-          video.play().then(watchEnd).catch(function () { finish(false); });
-        });
-        intro.appendChild(btn);
-      }
+      /* ------- 割り込み開始 ------- */
+      function start() {
+        if (!anim) return;
+        finished = false;
+        intro.hidden = false;
+        intro.classList.remove('is-out');
+        document.body.classList.add('is-intro-playing');
 
-      /* ------- 再生の見守り ------- */
-      function watchEnd() {
-        // ended が来なかった場合の保険。残り尺＋マージンで強制的に閉じる
-        const remain = (isFinite(video.duration) && video.duration > 0)
-          ? (video.duration - video.currentTime) * 1000
-          : 4000;
+        // 一本線 → バッ と開く。フラッシュも同時に焚いて“割り込んだ”感を出す
+        fire(flash);
+        intro.classList.add('is-in');
+
+        // 0 〜（1周 × 周回数）だけ再生して止める
+        const last = CONFIG.CYCLE_FRAMES * CONFIG.CYCLES;
+        anim.setLoop(false);
+        anim.playSegments([0, last], true);
+
+        // complete が来なかった場合の保険
+        const ms = (last / (anim.frameRate || 25)) * 1000;
         clearTimeout(endTimer);
-        endTimer = setTimeout(function () { finish(true); }, remain + CONFIG.SAFETY_MARGIN);
+        endTimer = setTimeout(function () { finish(true); }, ms + CONFIG.SAFETY_MARGIN);
 
         setTimeout(function () {
           if (!finished) skipBtn.classList.add('is-shown');
         }, CONFIG.SKIP_AFTER);
       }
 
-      /* ------- 割り込み開始 ------- */
-      function start() {
-        finished = false;
-        intro.hidden = false;
-        intro.classList.remove('is-out');
-        document.body.classList.add('is-intro-playing');
-
-        try { video.currentTime = 0; } catch (e) {}
-
-        // 一本線 → バッ と開く。フラッシュも同時に焚いて“割り込んだ”感を出す
-        fire(flash);
-        intro.classList.add('is-in');
-
-        video.muted = true;                 // Safari 対策で属性とは別に明示
-        const p = video.play();
-        if (p && typeof p.catch === 'function') {
-          p.then(watchEnd).catch(showPlayButton);
-        } else {
-          watchEnd();
-        }
-      }
-
-      /* ------- 映像の読み込みを待ってから始める ------- */
+      /* ------- Lottie の読み込み ------- */
       function boot() {
         if (reduce) { reveal(); return; }   // 動きを減らす設定なら割り込みなし
 
-        let started = false;
-        const go = function () {
-          if (started) return;
-          started = true;
-          setTimeout(start, CONFIG.BEAT_BEFORE);
+        let settled = false;
+        const giveUp = function () {
+          if (settled) return;
+          settled = true;
+          reveal();                          // 素材が来なくても本文は見せる
         };
+        const timer = setTimeout(giveUp, CONFIG.LOAD_TIMEOUT);
 
-        // 読み込めた／十分待った／読み込めなかった、のどれかで先へ進む
-        if (video.readyState >= 3) {
-          go();
-        } else {
-          video.addEventListener('canplaythrough', go, { once: true });
-          video.addEventListener('loadeddata', go, { once: true });
-          setTimeout(go, CONFIG.LOAD_TIMEOUT);
-        }
-        video.addEventListener('error', function () {
-          started = true;                   // 映像を出さず、本文だけ見せる
-          reveal();
-        }, { once: true });
+        fetch(CONFIG.SRC)
+          .then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            if (settled) return;             // 待ちきれずに本文を出した後だった
+            clearTimeout(timer);
+            settled = true;
+
+            // 背景レイヤーを捨てる指定があれば外す（透過して重ねたいとき用）
+            if (CONFIG.STRIP_LAYER && Array.isArray(data.layers)) {
+              data.layers = data.layers.filter(function (l) {
+                return l.nm !== CONFIG.STRIP_LAYER;
+              });
+            }
+
+            anim = lottie.loadAnimation({
+              container: box,
+              renderer: 'svg',
+              loop: false,
+              autoplay: false,
+              animationData: data,
+              rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
+            });
+
+            anim.addEventListener('complete', function () { finish(true); });
+            anim.addEventListener('DOMLoaded', function () {
+              fitSvg();
+              setTimeout(start, CONFIG.BEAT_BEFORE);
+            });
+          })
+          .catch(function (e) {
+            console.warn('Lottie の読み込みに失敗:', e);
+            clearTimeout(timer);
+            giveUp();
+          });
       }
 
       /* ------- イベント ------- */
-      video.addEventListener('ended', function () { finish(true); });
-
       skipBtn.addEventListener('click', function (e) {
         e.stopPropagation();
         finish(false);
