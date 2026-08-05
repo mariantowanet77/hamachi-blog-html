@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Cavalryを触る｜Labo｜はまち日和</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/common/favicon.svg">
+  <link rel="stylesheet" href="/common/style.css">
+  <!-- 本文を隠す CSS は JS が動くときだけ有効にする。あわせて、万一
+       下の script が落ちても本文が出ないまま終わらないよう保険をかけておく -->
+  <script>
+    document.documentElement.classList.add('js');
+    setTimeout(function () {
+      var m = document.getElementById('cv-main');
+      if (m) m.classList.add('is-revealed');
+    }, 9000);
+  </script>
+  <style>
+    /* =====================================================================
+       Cavalry で作ったムービーを「割り込み」で流すページ
+       ・ページを開くと一拍おいて、映像が全画面に“ブツッ”と割り込んでくる
+       ・再生が終わると白フラッシュ → ブラウン管オフ風にたたんで本文へ
+       ・タイミング類は script 冒頭の CONFIG に集約
+       ===================================================================== */
+    .cv { background: #05060a; color: #eaf0ff; overflow-x: hidden; }
+
+    /* イントロ再生中は裏のページをスクロールさせない */
+    .cv.is-intro-playing { overflow: hidden; }
+
+    /* ---------- 割り込みオーバーレイ ---------- */
+    /* #intro 自体は透明。実際に映るのは .intro__screen（黒い画面）のほう。
+       こうしておくと「開く前は下のページが見えている」状態を作れる */
+    #intro {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    #intro[hidden] { display: none; }
+
+    .intro__screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      transform: scaleY(0.004);          /* 初期状態＝細い一本線 */
+      transform-origin: center;
+      will-change: transform, filter;
+    }
+    /* 割り込み：線 → 一気に開く */
+    #intro.is-in .intro__screen { animation: cv-cut-in .22s cubic-bezier(.2, .9, .2, 1) forwards; }
+    /* 退出：たたんで線に戻り、横に消える */
+    #intro.is-out .intro__screen { animation: cv-cut-out .42s cubic-bezier(.7, 0, .3, 1) forwards; }
+
+    @keyframes cv-cut-in {
+      0%   { transform: scaleY(0.004) scaleX(1);   filter: brightness(3.2); }
+      55%  { transform: scaleY(1.04)  scaleX(1);   filter: brightness(1.35); }
+      100% { transform: scaleY(1)     scaleX(1);   filter: brightness(1); }
+    }
+    @keyframes cv-cut-out {
+      0%   { transform: scaleY(1)     scaleX(1);    filter: brightness(1); }
+      42%  { transform: scaleY(0.006) scaleX(1);    filter: brightness(3.4); }
+      70%  { transform: scaleY(0.006) scaleX(1);    filter: brightness(3.4); }
+      100% { transform: scaleY(0.006) scaleX(0);    filter: brightness(3.4); opacity: 0; }
+    }
+
+    #intro-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;                  /* 全画面を埋める（横長画面） */
+      display: block;
+      background: #000;
+    }
+    /* 縦長の画面では切れすぎるので、構図を優先して全体を映す */
+    @media (max-aspect-ratio: 1 / 1) {
+      #intro-video { object-fit: contain; }
+    }
+
+    /* 走査線＋ビネット。“信号が割り込んできた”感の味付け（うっすらでOK） */
+    .intro__grain {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, .035) 0px,
+          rgba(255, 255, 255, .035) 1px,
+          rgba(0, 0, 0, 0) 1px,
+          rgba(0, 0, 0, 0) 3px
+        ),
+        radial-gradient(120% 120% at 50% 50%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, .45) 100%);
+      mix-blend-mode: overlay;
+      opacity: .55;
+    }
+
+    /* 割り込み前後の白フラッシュ */
+    .intro__flash {
+      position: fixed;
+      inset: 0;
+      z-index: 101;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .intro__flash.is-firing { animation: cv-flash .16s ease-out forwards; }
+    @keyframes cv-flash {
+      0%   { opacity: .85; }
+      100% { opacity: 0; }
+    }
+
+    /* スキップ／自動再生がブロックされたときの再生ボタン */
+    .intro__skip,
+    .intro__play {
+      position: absolute;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255, 255, 255, .3);
+      border-radius: 999px;
+      background: rgba(8, 12, 22, .45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      color: #eaf0ff;
+      font: inherit;
+      cursor: pointer;
+      transition: background .2s, border-color .2s, opacity .3s;
+    }
+    .intro__skip:hover,
+    .intro__play:hover { background: rgba(255, 255, 255, .14); border-color: #fff; }
+
+    .intro__skip {
+      right: 20px;
+      bottom: 20px;
+      padding: 9px 16px;
+      font-size: .82rem;
+      letter-spacing: .04em;
+      opacity: 0;                          /* 割り込み直後は隠しておく */
+    }
+    .intro__skip.is-shown { opacity: .75; }
+
+    .intro__play {
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      padding: 16px 30px;
+      font-size: 1rem;
+    }
+
+    /* ---------- 本文 ---------- */
+    .cv .site-header {
+      background: rgba(6, 9, 16, .32);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom-color: rgba(255, 255, 255, .08);
+    }
+    .cv .site-title { color: #fff; }
+    .cv .site-title:hover { color: #9fd0ff; }
+    .cv .nav-toggle span { background-color: #fff; }
+    .cv .nav-toggle span:nth-of-type(1)::before { border-left-color: #fff; }
+    .cv .nav-toggle span:nth-of-type(3)::before { border-right-color: #fff; }
+
+    /* 背景の淡いグロー（真っ黒だと寂しいので） */
+    .cv::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(90% 70% at 18% 8%, rgba(60, 96, 210, .22), transparent 60%),
+        radial-gradient(80% 70% at 88% 92%, rgba(150, 84, 220, .18), transparent 62%),
+        #05060a;
+    }
+
+    .cv-main {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 10vh 24px 96px;
+      min-height: calc(100vh - var(--header-h, 76px));
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    .cv-main h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 8vw, 5rem);
+      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: .01em;
+      background: linear-gradient(120deg, #ffffff, #9fd0ff 55%, #c9a7ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .cv-main p {
+      margin: 0;
+      max-width: 48ch;
+      line-height: 1.9;
+      color: rgba(234, 240, 255, .9);
+    }
+    .cv-note { font-size: .85rem; color: rgba(234, 240, 255, .58); }
+
+    .cv-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+    .cv-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: 1px solid rgba(255, 255, 255, .28);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .04);
+      color: #eaf0ff;
+      font: inherit;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .2s, border-color .2s, transform .2s;
+    }
+    .cv-btn:hover {
+      background: rgba(255, 255, 255, .12);
+      border-color: #fff;
+      color: #fff;
+      text-decoration: none;
+      transform: translateY(-2px);
+    }
+
+    /* 割り込みが明けたあと、本文をふわっと立ち上げる
+       ※ JS が動く環境でだけ隠す（.js ゲート）。JS 無効なら最初から見える */
+    .js .cv-reveal > * {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    .cv-main.is-revealed > * {
+      animation: cv-rise .6s cubic-bezier(.2, .8, .2, 1) forwards;
+    }
+    .cv-main.is-revealed > *:nth-child(1) { animation-delay: .02s; }
+    .cv-main.is-revealed > *:nth-child(2) { animation-delay: .09s; }
+    .cv-main.is-revealed > *:nth-child(3) { animation-delay: .16s; }
+    .cv-main.is-revealed > *:nth-child(4) { animation-delay: .23s; }
+    .cv-main.is-revealed > *:nth-child(5) { animation-delay: .30s; }
+    @keyframes cv-rise {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 「動きを減らす」設定：割り込み演出はやめて、最初から本文を出す */
+    @media (prefers-reduced-motion: reduce) {
+      .intro__screen,
+      #intro.is-in .intro__screen,
+      #intro.is-out .intro__screen { animation: none; transform: none; }
+      .intro__flash.is-firing { animation: none; }
+      .js .cv-reveal > * { opacity: 1; transform: none; }
+      .cv-main.is-revealed > * { animation: none; }
+    }
+  </style>
+</head>
+<body class="cv" data-base="/">
+
+  <!-- =====================================================================
+       割り込み映像（Cavalry で作ったコンポジション）
+       ・音声トラックは無し。muted / playsinline は自動再生を通すための保険
+       ===================================================================== -->
+  <div id="intro" hidden>
+    <div class="intro__screen">
+      <video id="intro-video"
+             src="/assets/img/labo/Composition%201.mp4"
+             muted
+             playsinline
+             preload="auto"
+             disablepictureinpicture></video>
+      <div class="intro__grain"></div>
+    </div>
+    <button type="button" class="intro__skip" id="intro-skip">SKIP →</button>
+  </div>
+  <div class="intro__flash" id="intro-flash"></div>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="site-title" href="/">はまち日和</a>
+      <nav class="site-nav">
+        <a class="btn" href="/">ホーム</a>
+        <a class="btn" href="/pastarticles/">過去の記事</a>
+        <a class="btn" href="/about/">このブログについて</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="cv-main cv-reveal" id="cv-main">
+    <h1>Cavalryを触る</h1>
+    <p>
+      After Effects みたいなモーショングラフィックスのツール「Cavalry」を触ってみた回。
+      作ったコンポジションを書き出して、ページを開いた瞬間に全画面で割り込ませています。
+    </p>
+    <p class="cv-note">
+      映像はページを開くと自動で流れます（音声なし・約4秒）。
+      クリック／Esc でスキップ、下のボタンでもう一度見られます。
+    </p>
+    <div class="cv-actions">
+      <button type="button" class="cv-btn" id="cv-replay">▶ もう一度割り込ませる</button>
+      <a class="cv-btn" href="/labo/">← Labo に戻る</a>
+    </div>
+  </main>
+
+  <script src="/common/site.js"></script>
+
+  <!-- =====================================================================
+       割り込みの進行管理
+       ・読み込み待ち → 一拍おく → フラッシュ＆カットイン → 再生 → カットアウト
+       ・映像が読めない／再生できない場合は黙って本文だけ見せる（固まらせない）
+       ===================================================================== -->
+  <script>
+    (function () {
+      const intro   = document.getElementById('intro');
+      const video   = document.getElementById('intro-video');
+      const flash   = document.getElementById('intro-flash');
+      const skipBtn = document.getElementById('intro-skip');
+      const main    = document.getElementById('cv-main');
+      const replay  = document.getElementById('cv-replay');
+
+      /* ------- ここをいじれば調整できる（CONFIG） ------- */
+      const CONFIG = {
+        BEAT_BEFORE: 260,   // 割り込む前に本文を見せておく時間(ms)。“不意打ち”感の素
+        LOAD_TIMEOUT: 1800, // 映像の読み込みを待つ上限(ms)。超えたら待たずに進む
+        CUT_IN: 220,        // カットインの尺(ms) ※CSS の cv-cut-in と揃える
+        CUT_OUT: 420,       // カットアウトの尺(ms) ※CSS の cv-cut-out と揃える
+        SKIP_AFTER: 700,    // SKIP ボタンを出すまでの時間(ms)
+        SAFETY_MARGIN: 2000,// 再生完了イベントが来ないときの保険(ms)
+      };
+
+      const reduce = window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      let endTimer = null;
+      let finished = false;
+
+      /* ------- 本文を出して終了 ------- */
+      function reveal() {
+        main.classList.add('is-revealed');
+      }
+
+      function finish(withFlash) {
+        if (finished) return;
+        finished = true;
+        clearTimeout(endTimer);
+        skipBtn.classList.remove('is-shown');
+
+        if (withFlash) fire(flash);
+
+        intro.classList.remove('is-in');
+        intro.classList.add('is-out');
+        document.body.classList.remove('is-intro-playing');
+        reveal();
+
+        // アニメーションが終わったら完全に取り除く（裏のクリックを邪魔しない）
+        setTimeout(function () {
+          intro.hidden = true;
+          try { video.pause(); } catch (e) {}
+        }, CONFIG.CUT_OUT);
+      }
+
+      // 白フラッシュを1回焚く（連続で焚けるようアニメを付け直す）
+      function fire(el) {
+        el.classList.remove('is-firing');
+        void el.offsetWidth;      // リフローを挟んでアニメをリセット
+        el.classList.add('is-firing');
+      }
+
+      /* ------- 自動再生がブロックされたとき用の再生ボタン ------- */
+      function showPlayButton() {
+        if (intro.querySelector('.intro__play')) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'intro__play';
+        btn.textContent = '▶ 再生';
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          btn.remove();
+          video.play().then(watchEnd).catch(function () { finish(false); });
+        });
+        intro.appendChild(btn);
+      }
+
+      /* ------- 再生の見守り ------- */
+      function watchEnd() {
+        // ended が来なかった場合の保険。残り尺＋マージンで強制的に閉じる
+        const remain = (isFinite(video.duration) && video.duration > 0)
+          ? (video.duration - video.currentTime) * 1000
+          : 4000;
+        clearTimeout(endTimer);
+        endTimer = setTimeout(function () { finish(true); }, remain + CONFIG.SAFETY_MARGIN);
+
+        setTimeout(function () {
+          if (!finished) skipBtn.classList.add('is-shown');
+        }, CONFIG.SKIP_AFTER);
+      }
+
+      /* ------- 割り込み開始 ------- */
+      function start() {
+        finished = false;
+        intro.hidden = false;
+        intro.classList.remove('is-out');
+        document.body.classList.add('is-intro-playing');
+
+        try { video.currentTime = 0; } catch (e) {}
+
+        // 一本線 → バッ と開く。フラッシュも同時に焚いて“割り込んだ”感を出す
+        fire(flash);
+        intro.classList.add('is-in');
+
+        video.muted = true;                 // Safari 対策で属性とは別に明示
+        const p = video.play();
+        if (p && typeof p.catch === 'function') {
+          p.then(watchEnd).catch(showPlayButton);
+        } else {
+          watchEnd();
+        }
+      }
+
+      /* ------- 映像の読み込みを待ってから始める ------- */
+      function boot() {
+        if (reduce) { reveal(); return; }   // 動きを減らす設定なら割り込みなし
+
+        let started = false;
+        const go = function () {
+          if (started) return;
+          started = true;
+          setTimeout(start, CONFIG.BEAT_BEFORE);
+        };
+
+        // 読み込めた／十分待った／読み込めなかった、のどれかで先へ進む
+        if (video.readyState >= 3) {
+          go();
+        } else {
+          video.addEventListener('canplaythrough', go, { once: true });
+          video.addEventListener('loadeddata', go, { once: true });
+          setTimeout(go, CONFIG.LOAD_TIMEOUT);
+        }
+        video.addEventListener('error', function () {
+          started = true;                   // 映像を出さず、本文だけ見せる
+          reveal();
+        }, { once: true });
+      }
+
+      /* ------- イベント ------- */
+      video.addEventListener('ended', function () { finish(true); });
+
+      skipBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        finish(false);
+      });
+      // 画面のどこを触ってもスキップ
+      intro.addEventListener('click', function () { finish(false); });
+      document.addEventListener('keydown', function (e) {
+        if (intro.hidden) return;
+        if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          finish(false);
+        }
+      });
+
+      // もう一度割り込ませる
+      replay.addEventListener('click', function () {
+        if (!intro.hidden) return;
+        start();
+      });
+
+      boot();
+    })();
+  </script>
+</body>
+</html>

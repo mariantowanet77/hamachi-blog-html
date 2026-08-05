@@ -102,7 +102,11 @@ resource "aws_lambda_function_url" "like_api" {
   authorization_type = "NONE" # 公開API（記事IDの形式チェックは Lambda 側で実施）
 
   cors {
-    allow_origins = ["https://hamachi-daily.com"]
+    allow_origins = [
+      "https://hamachi-daily.com", # 本番（CloudFront + 独自ドメイン）
+      "http://localhost:8000",     # ローカル確認用（python -m http.server 8000）
+      "http://127.0.0.1:8000",     # 同上（localhost を IP で開く場合）
+    ]
     allow_methods = ["GET", "POST"]
     allow_headers = ["content-type"] # POST の JSON 送信（プリフライト）用
     max_age       = 86400
