@@ -24,7 +24,10 @@
       height: min(78vmin, 760px);
       z-index: 50;
       pointer-events: none;   /* 下のページを操作できるように、クリックを通す */
+      transition: opacity .6s ease;
     }
+    /* 再生し終わったらふっと消える */
+    #anim.is-done { opacity: 0; }
     /* overflow を visible にすると枠の外へ絵が逃げて中央に収まらないので、
        既定（hidden）のままにして表示枠の中に収める */
     #anim svg { display: block; }
@@ -83,14 +86,17 @@
         // 描かれている。実際に描かれている範囲を測って、そこを表示枠にする。
         // 全フレームを測る（間引くと動きの端を取りこぼして中央がずれる）
         FIT_PADDING: 0.04,   // 余白（描画範囲に対する割合）
+
+        FADE_MS: 600,        // 再生後に消えるまでの時間(ms) ※CSS の transition と揃える
       };
 
       const stage = document.getElementById('anim');
       let anim = null;
 
       /* ------- 実際に絵が描かれている範囲を測る -------
-         数フレーム分の bbox を合体させて「動き全体が収まる矩形」を出す。
-         ※ goToAndStop は再生を止めるので、測り終えたら play() し直すこと */
+         全フレームの bbox を合体させて「動き全体が収まる矩形」を出す。
+         ※ 測り終えると再生位置が最終フレームに残る。そのまま play() すると
+           即座に終端＝complete になって一瞬で消えるので、必ず 0 に巻き戻すこと */
       function measureBox(a) {
         const svg = a.renderer && a.renderer.svgElement;
         if (!svg) return null;
@@ -113,6 +119,28 @@
         return { x: x1 - pad, y: y1 - pad, w: (x2 - x1) + pad * 2, h: (y2 - y1) + pad * 2 };
       }
 
+      /* ------- コンポ枠のクリップを広げる -------
+         lottie-web はルートの <g> に「0,0〜コンポ幅×高さ」のクリップを掛ける。
+         この素材は絵が原点をまたぐ位置（負の座標）にあるため、そのままだと
+         正の側＝右下の 1/4 しか描かれない。表示枠に合わせて広げておく。
+         ※ getBBox() はクリップを無視するので、測定値だけ見ても気づけない */
+      function widenClip(a, box) {
+        const svg = a.renderer && a.renderer.svgElement;
+        if (!svg) return;
+        const rect = svg.querySelector('clipPath rect');
+        if (rect && box) {
+          rect.setAttribute('x', box.x);
+          rect.setAttribute('y', box.y);
+          rect.setAttribute('width', box.w);
+          rect.setAttribute('height', box.h);
+        } else {
+          // rect が見つからない造りだったときは、クリップ自体を外す
+          svg.querySelectorAll('[clip-path]').forEach(function (el) {
+            el.removeAttribute('clip-path');
+          });
+        }
+      }
+
       fetch(CONFIG.SRC)
         .then(function (res) {
           if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -127,8 +155,8 @@
           anim = lottie.loadAnimation({
             container: stage,
             renderer: 'svg',
-            loop: true,
-            autoplay: true,
+            loop: false,        // 1回だけ流して終わり
+            autoplay: false,
             animationData: data,
             // meet ＝ 全体が収まるように縮めて中央寄せ（切れない）
             rendererSettings: { preserveAspectRatio: 'xMidYMid meet' },
@@ -140,7 +168,17 @@
             if (box && svg) {
               svg.setAttribute('viewBox', box.x + ' ' + box.y + ' ' + box.w + ' ' + box.h);
             }
-            anim.play();   // 測定で止まっているので再開する
+            widenClip(anim, box);
+            anim.goToAndPlay(0, true);   // 先頭に巻き戻してから再生する
+          });
+
+          // 再生し終わったら、ふっと消して DOM からも取り除く
+          anim.addEventListener('complete', function () {
+            stage.classList.add('is-done');
+            setTimeout(function () {
+              if (anim) { anim.destroy(); anim = null; }
+              stage.remove();
+            }, CONFIG.FADE_MS + 100);
           });
         })
         .catch(function (e) {
