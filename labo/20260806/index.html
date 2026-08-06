@@ -4,168 +4,67 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
-  <title>Lottie 背景透過テスト｜Labo｜はまち日和</title>
+  <title>Lottie 重ねテスト｜Labo｜はまち日和</title>
   <link rel="icon" type="image/svg+xml" href="/assets/common/favicon.svg">
   <link rel="stylesheet" href="/common/style.css">
   <style>
     /* =====================================================================
-       test01.json を全画面で流して「背景が透過するか」を確かめるページ
-       ・後ろに市松模様やグラデを敷いておき、透けるかどうかを目で見て確認する
-       ・Cavalry の「Background Shape」レイヤーは実行時に外せるようにしてある
-         （mp4 では原理的にできなかったのがここ）
+       ふつうのページ（過去の記事ページと同じ中身）の上に、
+       Lottie のアニメを背景透過で重ねて流すテスト。
+       ・画面の中央に置く／操作UIは無し
+       ・下のページはそのまま読めるし、リンクも押せる（pointer-events: none）
        ===================================================================== */
-    .lt { background: #05060a; color: #eaf0ff; overflow: hidden; }
-
-    /* ---------- 後ろに敷く背景（透過の確認用） ---------- */
-    #backdrop {
+    #anim {
       position: fixed;
-      inset: 0;
-      z-index: 0;
-    }
-    /* 市松模様：透過していればこれが透けて見える（画像編集ソフトと同じ考え方） */
-    #backdrop.bd-checker {
-      background-color: #ffffff;
-      background-image:
-        linear-gradient(45deg, #c8ccd4 25%, transparent 25%, transparent 75%, #c8ccd4 75%),
-        linear-gradient(45deg, #c8ccd4 25%, transparent 25%, transparent 75%, #c8ccd4 75%);
-      background-size: 48px 48px;
-      background-position: 0 0, 24px 24px;
-    }
-    /* カラフルなグラデ：色の上でも抜けているか確認する */
-    #backdrop.bd-gradient {
-      background:
-        radial-gradient(60% 60% at 20% 20%, #ff4d6d, transparent 60%),
-        radial-gradient(60% 60% at 80% 25%, #4dd2ff, transparent 60%),
-        radial-gradient(70% 70% at 50% 90%, #ffd84d, transparent 60%),
-        #2b1b57;
-    }
-    /* 写真のかわりの風景っぽいグラデ */
-    #backdrop.bd-scene {
-      background: linear-gradient(180deg, #0b1a3a 0%, #2a4a7a 45%, #d9a05f 78%, #f3d9a4 100%);
-    }
-    /* サイトの地の色 */
-    #backdrop.bd-dark { background: #05060a; }
-
-    /* ---------- Lottie 本体：画面全体 ---------- */
-    #stage {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;      /* 下のUIを触れるように */
-    }
-    #stage svg { display: block; }
-
-    /* ---------- 操作パネル ---------- */
-    .panel {
-      position: fixed;
-      z-index: 5;
+      top: 50%;
       left: 50%;
-      bottom: 18px;
-      transform: translateX(-50%);
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-      padding: 10px 12px;
-      max-width: calc(100vw - 24px);
-      border: 1px solid rgba(255, 255, 255, .18);
-      border-radius: 14px;
-      background: rgba(10, 14, 24, .72);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, .45);
+      transform: translate(-50%, -50%);
+      /* 画面の短いほうに合わせた正方形。ここを変えれば大きさを調整できる */
+      width: min(78vmin, 760px);
+      height: min(78vmin, 760px);
+      z-index: 50;
+      pointer-events: none;   /* 下のページを操作できるように、クリックを通す */
     }
-    .panel button {
-      padding: 8px 14px;
-      border: 1px solid rgba(255, 255, 255, .28);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, .06);
-      color: #eaf0ff;
-      font: inherit;
-      font-size: .82rem;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background .15s, border-color .15s;
-    }
-    .panel button:hover { background: rgba(255, 255, 255, .16); border-color: #fff; }
-    /* トグルが ON のとき */
-    .panel button.is-on {
-      background: #9fd0ff;
-      border-color: #9fd0ff;
-      color: #071018;
-      font-weight: 700;
-    }
-
-    .readout {
-      position: fixed;
-      z-index: 5;
-      left: 16px;
-      top: calc(var(--header-h, 76px) + 14px);
-      padding: 10px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, .16);
-      background: rgba(10, 14, 24, .72);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: .74rem;
-      line-height: 1.7;
-      white-space: pre;
-      color: rgba(234, 240, 255, .88);
-    }
-
-    /* ヘッダーを透過ガラス風に */
-    .lt .site-header {
-      position: fixed;
-      inset: 0 0 auto 0;
-      z-index: 6;
-      background: rgba(6, 9, 16, .35);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-bottom-color: rgba(255, 255, 255, .10);
-    }
-    .lt .site-title { color: #fff; }
-    .lt .site-title:hover { color: #9fd0ff; }
-    .lt .nav-toggle span { background-color: #fff; }
-    .lt .nav-toggle span:nth-of-type(1)::before { border-left-color: #fff; }
-    .lt .nav-toggle span:nth-of-type(3)::before { border-right-color: #fff; }
-
-    @media (max-width: 640px) {
-      .readout { font-size: .68rem; left: 10px; }
-      .panel { gap: 6px; padding: 8px; }
-      .panel button { padding: 7px 10px; font-size: .74rem; }
-    }
+    /* overflow を visible にすると枠の外へ絵が逃げて中央に収まらないので、
+       既定（hidden）のままにして表示枠の中に収める */
+    #anim svg { display: block; }
   </style>
 </head>
-<body class="lt" data-base="/">
-
-  <!-- 透過の確認用に後ろへ敷く背景。ボタンで切り替える -->
-  <div id="backdrop" class="bd-checker"></div>
-
-  <!-- Lottie の描画先（画面全体） -->
-  <div id="stage"></div>
-
+<body data-base="/">
   <header class="site-header">
     <div class="site-header__inner">
       <a class="site-title" href="/">はまち日和</a>
       <nav class="site-nav">
         <a class="btn" href="/">ホーム</a>
-        <a class="btn" href="/pastarticles/">過去の記事</a>
+        <a class="btn btn--primary" href="/pastarticles/">過去の記事</a>
         <a class="btn" href="/about/">このブログについて</a>
       </nav>
     </div>
   </header>
 
-  <div class="readout" id="readout">読み込み中…</div>
+  <!-- アニメの置き場所。中身は lottie が作る -->
+  <div id="anim" aria-hidden="true"></div>
 
-  <div class="panel">
-    <button type="button" id="btn-bg">背景レイヤー: 外す</button>
-    <button type="button" id="btn-fit">画面いっぱい: ON</button>
-    <button type="button" id="btn-backdrop">後ろの柄: 市松</button>
-    <button type="button" id="btn-play">⏸ 一時停止</button>
-    <button type="button" id="btn-loop">ループ: ON</button>
-    <a class="btn" href="/labo/" style="font-size:.82rem;padding:8px 14px;">← Labo</a>
+  <div class="layout">
+    <main class="content">
+      <h1>過去の記事</h1>
+      <p>これまでに書いた記事の一覧です。記事の追加・管理は <code>common/site.js</code>
+         の <code>ARTICLES</code> 配列で行います。</p>
+      <div class="card-grid" id="article-manage"></div>
+    </main>
+    <aside class="sidebar">
+      <section class="sidebar__block">
+        <h2 class="sidebar__title">過去の記事</h2>
+        <ul class="article-list" id="sidebar-articles"></ul>
+      </section>
+    </aside>
   </div>
+
+  <footer class="site-footer">
+    <p class="access-count">あなたは <span id="access-count">—</span> 番目の来訪者です！</p>
+    <p class="copyright">© 2026 はまち日和</p>
+    <a class="secret-link" href="/secret/">【ひ♡み♡つ】</a>
+  </footer>
 
   <script src="/common/vendor/lottie_light.min.js"></script>
   <script src="/common/site.js"></script>
@@ -176,55 +75,30 @@
       const CONFIG = {
         SRC: '/assets/img/labo/test01.json',
 
-        // Cavalry 側の背景レイヤー名。この層を外すと背景が透明になる
+        // Cavalry 側の背景レイヤー名。これを外すと背景が透明になり、
+        // 下のページが透けて見える（mp4 ではできなかったところ）
         BG_LAYER: 'Background Shape',
 
-        // 素材は 1920x1080 のコンポだが、絵が実際に描かれているのは
-        // その一部だけ。ON にすると「実際に描かれている範囲」を測って
-        // そこを画面いっぱいに引き伸ばす。
-        AUTOFIT: true,
+        // この素材は絵がコンポ枠（0,0〜1920,1080）の外、原点まわりに
+        // 描かれている。実際に描かれている範囲を測って、そこを表示枠にする。
+        // 全フレームを測る（間引くと動きの端を取りこぼして中央がずれる）
         FIT_PADDING: 0.04,   // 余白（描画範囲に対する割合）
-        FIT_SAMPLES: 16,     // 何フレーム分を測って範囲を決めるか
       };
 
-      const stage    = document.getElementById('stage');
-      const backdrop = document.getElementById('backdrop');
-      const readout  = document.getElementById('readout');
-
-      const btnBg       = document.getElementById('btn-bg');
-      const btnFit      = document.getElementById('btn-fit');
-      const btnBackdrop = document.getElementById('btn-backdrop');
-      const btnPlay     = document.getElementById('btn-play');
-      const btnLoop     = document.getElementById('btn-loop');
-
-      const BACKDROPS = [
-        ['bd-checker',  '市松'],
-        ['bd-gradient', 'カラフル'],
-        ['bd-scene',    '風景'],
-        ['bd-dark',     'サイト地色'],
-      ];
-
-      let raw = null;      // 元データ（毎回ここから作り直す）
+      const stage = document.getElementById('anim');
       let anim = null;
-      let stripBg = true;  // 既定：背景を外した状態＝透過テスト
-      let autofit = CONFIG.AUTOFIT;
-      let looping = true;
-      let playing = true;  // 再生中かどうか（作り直しても状態を引き継ぐ）
-      let bdIndex = 0;
-      let fitBox = null;   // 実測した描画範囲 {x,y,w,h}
 
       /* ------- 実際に絵が描かれている範囲を測る -------
-         コンポは 1920x1080 でも、絵はその一部にしか無いことがある。
-         数フレーム分の bbox を合体させて「動き全体が収まる矩形」を出す。 */
+         数フレーム分の bbox を合体させて「動き全体が収まる矩形」を出す。
+         ※ goToAndStop は再生を止めるので、測り終えたら play() し直すこと */
       function measureBox(a) {
         const svg = a.renderer && a.renderer.svgElement;
         if (!svg) return null;
-        const total = a.totalFrames || 1;
-        const keep = a.currentFrame;
+        const total = Math.round(a.totalFrames) || 1;
         let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
 
-        for (let i = 0; i < CONFIG.FIT_SAMPLES; i++) {
-          a.goToAndStop(Math.round(total * i / CONFIG.FIT_SAMPLES), true);
+        for (let i = 0; i < total; i++) {
+          a.goToAndStop(i, true);
           let b = null;
           try { b = svg.getBBox(); } catch (e) {}
           if (!b || !b.width || !b.height) continue;
@@ -233,121 +107,43 @@
           x2 = Math.max(x2, b.x + b.width);
           y2 = Math.max(y2, b.y + b.height);
         }
-        a.goToAndStop(keep, true);
         if (!isFinite(x1) || x2 <= x1 || y2 <= y1) return null;
 
         const pad = Math.max(x2 - x1, y2 - y1) * CONFIG.FIT_PADDING;
         return { x: x1 - pad, y: y1 - pad, w: (x2 - x1) + pad * 2, h: (y2 - y1) + pad * 2 };
       }
 
-      /* ------- viewBox を差し替えて画面いっぱいに引き伸ばす ------- */
-      function applyFit() {
-        const svg = anim && anim.renderer && anim.renderer.svgElement;
-        if (!svg) return;
-        // 横長画面は埋める(slice)、縦長は全部見せる(meet)
-        const portrait = window.innerWidth / window.innerHeight < 1;
-        svg.setAttribute('preserveAspectRatio', portrait ? 'xMidYMid meet' : 'xMidYMid slice');
-
-        if (autofit && fitBox) {
-          svg.setAttribute('viewBox',
-            fitBox.x + ' ' + fitBox.y + ' ' + fitBox.w + ' ' + fitBox.h);
-        } else {
-          svg.setAttribute('viewBox', '0 0 ' + raw.w + ' ' + raw.h);
-        }
-      }
-      window.addEventListener('resize', applyFit);
-
-      /* ------- 読み込み / 作り直し ------- */
-      function build() {
-        if (anim) { anim.destroy(); anim = null; }
-        stage.innerHTML = '';
-
-        // lottie は渡したデータを書き換えるので、毎回ディープコピーを渡す
-        const data = JSON.parse(JSON.stringify(raw));
-        if (stripBg && Array.isArray(data.layers)) {
-          data.layers = data.layers.filter(function (l) { return l.nm !== CONFIG.BG_LAYER; });
-        }
-
-        anim = lottie.loadAnimation({
-          container: stage,
-          renderer: 'svg',
-          loop: looping,
-          autoplay: true,
-          animationData: data,
-          rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
-        });
-
-        anim.addEventListener('DOMLoaded', function () {
-          // 範囲の測定には goToAndStop を使う＝測り終えると停止状態になるので、
-          // ここで再生し直さないと止まったまま表示されてしまう
-          fitBox = measureBox(anim);
-          applyFit();
-          if (playing) anim.play();
-          render();
-        });
-      }
-
-      /* ------- 画面の表示を更新 ------- */
-      function render() {
-        btnBg.textContent = '背景レイヤー: ' + (stripBg ? '外す' : '出す');
-        btnBg.classList.toggle('is-on', stripBg);
-
-        btnFit.textContent = '画面いっぱい: ' + (autofit ? 'ON' : 'OFF');
-        btnFit.classList.toggle('is-on', autofit);
-
-        btnBackdrop.textContent = '後ろの柄: ' + BACKDROPS[bdIndex][1];
-
-        btnLoop.textContent = 'ループ: ' + (looping ? 'ON' : 'OFF');
-        btnLoop.classList.toggle('is-on', looping);
-
-        const paused = anim ? anim.isPaused : true;
-        btnPlay.textContent = paused ? '▶ 再生' : '⏸ 一時停止';
-
-        const fps = anim && anim.frameRate ? anim.frameRate : raw.fr;
-        const frames = anim ? Math.round(anim.totalFrames) : (raw.op - raw.ip);
-        const lines = [
-          'test01.json',
-          'コンポ   : ' + raw.w + ' x ' + raw.h,
-          '長さ     : ' + frames + 'f / ' + fps + 'fps = ' + (frames / fps).toFixed(2) + 's',
-          'レイヤー : ' + (anim ? anim.animationData.layers.length : '-') +
-            (stripBg ? '（背景を外した状態）' : '（そのまま）'),
-          '描画範囲 : ' + (fitBox
-            ? Math.round(fitBox.w) + ' x ' + Math.round(fitBox.h) +
-              ' @ ' + Math.round(fitBox.x) + ',' + Math.round(fitBox.y)
-            : '測定できず'),
-        ];
-        readout.textContent = lines.join('\n');
-      }
-
-      /* ------- 操作 ------- */
-      btnBg.addEventListener('click', function () { stripBg = !stripBg; build(); });
-      btnFit.addEventListener('click', function () { autofit = !autofit; applyFit(); render(); });
-      btnLoop.addEventListener('click', function () {
-        looping = !looping;
-        if (anim) anim.setLoop(looping);
-        render();
-      });
-      btnBackdrop.addEventListener('click', function () {
-        bdIndex = (bdIndex + 1) % BACKDROPS.length;
-        backdrop.className = BACKDROPS[bdIndex][0];
-        render();
-      });
-      btnPlay.addEventListener('click', function () {
-        if (!anim) return;
-        playing = anim.isPaused;
-        if (playing) anim.play(); else anim.pause();
-        render();
-      });
-
-      /* ------- 起動 ------- */
       fetch(CONFIG.SRC)
         .then(function (res) {
           if (!res.ok) throw new Error('HTTP ' + res.status);
           return res.json();
         })
-        .then(function (data) { raw = data; build(); })
+        .then(function (data) {
+          // 背景レイヤーを外して透明にする
+          if (Array.isArray(data.layers)) {
+            data.layers = data.layers.filter(function (l) { return l.nm !== CONFIG.BG_LAYER; });
+          }
+
+          anim = lottie.loadAnimation({
+            container: stage,
+            renderer: 'svg',
+            loop: true,
+            autoplay: true,
+            animationData: data,
+            // meet ＝ 全体が収まるように縮めて中央寄せ（切れない）
+            rendererSettings: { preserveAspectRatio: 'xMidYMid meet' },
+          });
+
+          anim.addEventListener('DOMLoaded', function () {
+            const box = measureBox(anim);
+            const svg = anim.renderer && anim.renderer.svgElement;
+            if (box && svg) {
+              svg.setAttribute('viewBox', box.x + ' ' + box.y + ' ' + box.w + ' ' + box.h);
+            }
+            anim.play();   // 測定で止まっているので再開する
+          });
+        })
         .catch(function (e) {
-          readout.textContent = '読み込みに失敗しました\n' + CONFIG.SRC + '\n' + e.message;
           console.warn('Lottie の読み込みに失敗:', e);
         });
     })();
